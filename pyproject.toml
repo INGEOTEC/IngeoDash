@@ -1,0 +1,14 @@
+[project]
+name = 'IngeoDash'
+dependencies = [
+    'numpy',
+    'b4msa',
+    'microtc',
+    'evodag',
+    'evomsa',
+    'scikit-learn',
+]
+dynamic = ['version']
+
+[tool.setuptools.dynamic]
+version = {attr = 'IngeoDash.__version__'}

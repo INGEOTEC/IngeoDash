@@ -32,9 +32,10 @@ def mock_data():
 def process_manager(mem,
                     triggered_id=None,
                     next=None,
-                    content=None):
+                    content=None,
+                    lang='es'):
     if triggered_id == mem.upload:
-        upload(mem, content)
+        upload(mem, content, lang=lang)
         return json.dumps(mem.mem)
     elif triggered_id == mem.next:
         store(mem)

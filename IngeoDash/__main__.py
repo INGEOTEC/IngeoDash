@@ -14,6 +14,7 @@
 from IngeoDash.app import process_manager, download, progress
 from IngeoDash.config import CONFIG
 from IngeoDash.annotate import flip_label
+from EvoMSA.utils import MODEL_LANG
 from dash import dcc, Output, Input, callback, ctx, Dash, State, dash_table, html, Patch
 import dash_bootstrap_components as dbc
 
@@ -21,15 +22,17 @@ import dash_bootstrap_components as dbc
 @callback(
     Output('store', 'data'),
     Input(CONFIG.next, 'n_clicks'),
-    Input(CONFIG.upload, 'contents'),    
+    Input(CONFIG.upload, 'contents'),
+    State(CONFIG.lang, 'value'),
     State('store', 'data'),
     prevent_initial_call=True)
 def process_manager_callback(next,
                              content,
+                             lang,
                              mem):
     mem = CONFIG(mem)
     return process_manager(mem, ctx.triggered_id,
-                           next, content)
+                           next, content, lang)
 
 
 @callback(
@@ -88,6 +91,8 @@ def download_callback(_, filename, mem):
 def run():
     app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
                suppress_callback_exceptions=True)
+    lang = dbc.Select(id=CONFIG.lang, value='es',
+                      options=[dict(label=x, value=x) for x in MODEL_LANG])
 
     download_grp = dbc.InputGroup([dbc.InputGroupText('Filename:'),
                                    dbc.Input(placeholder='output.json',
@@ -97,7 +102,8 @@ def run():
                                    dbc.Button('Download',
                                               color='success',
                                               id=CONFIG.save)])
-    upload = dcc.Upload(id=CONFIG.upload, children=html.A('Upload'))
+    upload = dbc.InputGroup([lang, dcc.Upload(id=CONFIG.upload, 
+                                              children=dbc.Button('Upload'))])
     app.layout = dbc.Container([dcc.Loading(children=dcc.Store('store'),
                                             fullscreen=True), 
                                 dcc.Download(id=CONFIG.download),

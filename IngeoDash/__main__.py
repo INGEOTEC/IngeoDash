@@ -85,7 +85,7 @@ def download_callback(_, filename, mem):
     return download(mem, filename)
 
 
-if __name__ == '__main__':
+def run():
     app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
                suppress_callback_exceptions=True)
 
@@ -112,3 +112,7 @@ if __name__ == '__main__':
                                 dbc.Row(download_grp),
                                 dbc.Row(upload)])
     app.run_server(debug=True)
+
+
+if __name__ == '__main__':
+    run()

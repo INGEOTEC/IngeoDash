@@ -10,7 +10,7 @@ IngeoDash
 		:target: https://badge.fury.io/py/IngeoDash
 
 .. image:: https://colab.research.google.com/assets/colab-badge.svg
-		:target: https://colab.research.google.com/github/INGEOTEC/IngeoDash/blob/docs/docs/IngeoDash.ipynb 
+		:target: https://colab.research.google.com/github/INGEOTEC/IngeoDash/blob/master/docs/IngeoDash.ipynb 
 
 .. code-block:: bash
 

@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from IngeoDash.annotate import flip_label, label_column, store
-from IngeoDash.config import CONFIG
+from IngeoDash.config import CONFIG, Config
+from dash import dcc, dash_table, html
 from dash.exceptions import PreventUpdate
-from EvoMSA import DenseBoW
-import base64
+import dash_bootstrap_components as dbc
+from dash import Patch
 import string
-import io
 import json
 import numpy as np
 
@@ -29,34 +29,49 @@ def mock_data():
             for x in tweet_iterator(TWEETS) if x['klass'] in ['P', 'N']]
 
 
-def process_manager(mem,
-                    triggered_id=None,
-                    next=None,
-                    content=None,
-                    lang='es'):
-    if triggered_id == mem.upload:
-        upload(mem, content, lang=lang)
-        return json.dumps(mem.mem)
-    elif triggered_id == mem.next:
-        store(mem)
-        db = CONFIG.db[mem[mem.username]]
-        init = mem[mem.n]
-        data = db[mem.original]
-        if len(data):
-            rest = data[mem.n_value:]
-            data = data[:mem.n_value]
-            mem[mem.n] = init + mem.n_value
-        else:
-            data = []
-            rest = []
-        db[mem.data] = data
-        db[mem.original] = rest
-        label_column(mem)        
-        return json.dumps(mem.mem)
-    raise PreventUpdate
+def table_next(mem: Config):
+    store(mem)
+    db = CONFIG.db[mem[mem.username]]
+    init = mem[mem.n]
+    data = db[mem.original]
+    if len(data):
+        rest = data[mem.n_value:]
+        data = data[:mem.n_value]
+        mem[mem.n] = init + mem.n_value
+    else:
+        data = []
+        rest = []
+    db[mem.data] = data
+    db[mem.original] = rest
+    label_column(mem)        
+    return json.dumps(mem.mem)
 
 
-def user(mem):
+def table(mem: Config):
+    if mem.username in mem:
+        data = CONFIG.db[mem[mem.username]][mem.data]
+    else:
+        data = [{}]
+    return dash_table.DataTable(data if len(data) else [{}],
+                                style_data={'whiteSpace': 'normal',
+                                            'textAlign': 'left',
+                                            'height': 'auto'},
+                                style_header={'fontWeight': 'bold',
+                                              'textAlign': 'left'},
+                                id=CONFIG.data)
+
+
+def table_component():
+    return dbc.Stack([dbc.Progress(value=0, id=CONFIG.progress),
+                      html.Div(id=CONFIG.center,
+                               children=table(CONFIG)),
+                      dbc.Button('Next', 
+                                 color='primary', 
+                                 id=CONFIG.next,
+                                 n_clicks=0)])
+
+
+def user(mem: Config):
     try:
         username = mem[mem.username]
     except KeyError:
@@ -74,32 +89,25 @@ def user(mem):
     return username, db
            
 
-def upload(mem, content, lang='es'):
-    content_type, content_string = content.split(',')
-    decoded = base64.b64decode(content_string)
-    _ = io.StringIO(decoded.decode('utf-8'))
-    data = [json.loads(x) for x in _]
-    username, db = user(mem)
-
-    original = [x for x in data if mem.label_header not in x]
-    permanent = db.get(mem.permanent, list())
-    permanent.extend([x for x in data if mem.label_header in x])
-    db[mem.data] = original[:mem.n_value]
-    db[mem.permanent] = permanent
-    db[mem.original] = original[mem.n_value:]
-    mem.mem = {mem.n: mem.n_value,
-               mem.lang: lang,
-               mem.size: len(original), 
-               mem.username: username}
-    if lang not in mem.denseBoW:
-        dense = DenseBoW(lang=lang, voc_size_exponent=15,
-                         n_jobs=mem.n_jobs,
-                         dataset=False)
-        CONFIG.denseBoW[lang] = dense.text_representations
-    label_column(mem)
+def progress(mem: Config):
+    if mem.size not in mem:
+        return 0
+    tot = mem[mem.size]
+    if tot == 0:
+        return 100
+    n = mem[mem.n]
+    return np.ceil(100 * n / tot)
 
 
-def download(mem, filename):
+def update_row(mem: Config, table: dict):
+    data = flip_label(mem, k=table['row'])
+    patch = Patch()
+    del patch[table['row']]
+    patch.insert(table['row'], data)
+    return patch
+
+
+def download(mem: Config, filename: str):
     db = CONFIG.db[mem[mem.username]]
     permanent = db.get(mem.permanent, list())
     data = db.get(mem.data, list())
@@ -107,11 +115,13 @@ def download(mem, filename):
     return dict(content='\n'.join(_), filename=filename)
 
 
-def progress(mem):
-    if mem.size not in mem:
-        return 0
-    tot = mem[mem.size]
-    if tot == 0:
-        return 100
-    n = mem[mem.n]
-    return np.ceil(100 * n / tot)    
+def download_component():
+    return dbc.InputGroup([dcc.Download(id=CONFIG.download),
+                           dbc.InputGroupText('Filename:'),
+                           dbc.Input(placeholder='output.json',
+                                     value='output.json',
+                                     type='text',
+                                     id=CONFIG.filename),
+                           dbc.Button('Download',
+                                      color='success',
+                                      id=CONFIG.save)])    

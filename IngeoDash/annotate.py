@@ -18,35 +18,41 @@ from IngeoDash.config import CONFIG
 import numpy as np
 
 
-def label_column_predict(mem: Config):
-    db = CONFIG.db[mem[mem.username]]
-    data = db[mem.data]
-    if len(data) == 0:
-        return   
+def model(mem: Config, data: dict):
     lang = mem[mem.lang]
-    D = db[mem.permanent]
-    # bow = BoW(lang=lang, label_key=mem.label_header)
-    dense = DenseBoW(lang=lang, label_key=mem.label_header,
+    if lang not in CONFIG.denseBoW:
+        dense = DenseBoW(lang=lang, voc_size_exponent=15,
+                         n_jobs=mem.n_jobs, dataset=False)
+        CONFIG.denseBoW[lang] = dense.text_representations
+    dense = DenseBoW(lang=lang, key=mem.text,
+                     label_key=mem.label_header,
                      voc_size_exponent=15,
                      n_jobs=mem.n_jobs,
                      dataset=False, emoji=False, keyword=False)
     dense.text_representations_extend(CONFIG.denseBoW[lang])
-    dense.select(D=D).fit(D)
-    # cl = StackGeneralization(decision_function_models=[bow,
-    #                                                    dense]).fit(D)
+    return dense.select(D=data).fit(data)
+
+
+def label_column_predict(mem: Config, model=None):
+    db = CONFIG.db[mem[mem.username]]
+    data = db[mem.data]
+    if len(data) == 0:
+        return   
+    D = db[mem.permanent]
+    dense = model(mem, D)
     hys = dense.predict(data).tolist()
     for ele, hy in zip(data, hys):
         ele[mem.label_header] = ele.get(mem.label_header, hy)        
 
 
-def label_column(mem: Config):
+def label_column(mem: Config, model=model):
     db = CONFIG.db[mem[mem.username]]
     if mem.permanent in db:
         _ = np.unique([x[mem.label_header]
                        for x in db[mem.permanent]])
         if _.shape[0] > 1:
             mem[mem.labels] = tuple(_.tolist())
-            return label_column_predict(mem)
+            return label_column_predict(mem, model=model)
     label = mem.get(mem.labels, ('-', ))[0]
     data = db[mem.data]
     for ele in data:

@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from IngeoDash.config import Config
+from IngeoDash.config import CONFIG
 
 
 def test_Config():
     conf = Config()
-    default = dict(labels='labels',
+    default = dict(store='store',
+                   labels='labels',
                    label_header='klass',
                    data='corpus',
                    permanent='permanent',
@@ -36,7 +38,9 @@ def test_Config():
                    n_jobs=1,
                    denseBoW={},
                    db={},
-                   username='username')
+                   username='username',
+                   text='text',
+                   mem={})
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -58,6 +62,13 @@ def test_Config_call():
     assert 'adios' not in xxx
     xxx['xxx'] = 3
     assert mem['xxx'] == 3
+
+
+def test_Config_call2():
+    mem = CONFIG(dict(label_header='label',
+                      text='texto'))
+    assert mem.label_header == 'label'
+    assert mem.text == 'texto'
 
 
 def test_CONFIG():

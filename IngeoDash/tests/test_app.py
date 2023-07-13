@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, process_manager, download, progress, user, update_row
+from IngeoDash.app import mock_data, table_next, download, progress, user, update_row, download_component, table_component
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
@@ -37,9 +37,8 @@ def test_user():
     assert 'hola' in CONFIG.db[username]
 
 
-def test_process_manager_next():
+def test_table_next():
     D = mock_data()[:15]
-    table = dict(row=0)
     mem = CONFIG({CONFIG.username: 'xxx',
                   CONFIG.n: CONFIG.n_value})
     CONFIG.db['xxx'] = {mem.data: D[:mem.n_value],
@@ -47,11 +46,11 @@ def test_process_manager_next():
     db = CONFIG.db['xxx']
     label_column(mem)
     size = len(D)
-    _ = process_manager(mem, triggered_id=mem.next)
+    _ = table_next(mem)
     assert len(db[mem.permanent]) == mem.n_value
     assert mem[mem.n] == 2 * mem.n_value
     assert len(db[mem.data]) == 5
-    _ = process_manager(mem, triggered_id=mem.next)
+    _ = table_next(mem)
     assert len(db[mem.data]) == 0
     assert len(db[mem.original]) == 0
 
@@ -63,6 +62,18 @@ def test_download():
     _ = download(mem, 'tmp.json')
     assert _['filename'] == 'tmp.json'
     assert len(_['content'].split('\n')) == 11
+
+
+def test_download_component():
+    import dash_bootstrap_components as dbc
+    element = download_component()
+    assert isinstance(element, dbc.InputGroup)
+
+
+def test_table_component():
+    import dash_bootstrap_components as dbc
+    element = table_component()
+    assert isinstance(element, dbc.Stack)
 
 
 def test_progress():

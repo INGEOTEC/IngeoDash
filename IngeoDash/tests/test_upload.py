@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.upload import upload_callback, upload_component
+from IngeoDash.upload import upload, upload_component
+from IngeoDash.annotate import label_column
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -19,7 +20,7 @@ import base64
 import json
 
 
-def test_upload_callback():
+def test_upload():
     mem = CONFIG({CONFIG.username: 'xxx'})
     mem.label_header = 'klass'
     D = list(tweet_iterator(TWEETS))
@@ -30,7 +31,7 @@ def test_upload_callback():
                                        encoding='utf-8')),
                       encoding='utf-8')
     content = f'NA,{content_str}'
-    _ = upload_callback(content, 'es', mem)
+    _ = upload(mem, content, 'es')
     info = json.loads(_)
     db = CONFIG.db[info[mem.username]]
     assert len(db[mem.data]) == mem.n_value
@@ -38,6 +39,22 @@ def test_upload_callback():
     assert len(db[mem.data]) + len(db[mem.original]) + len(db[mem.permanent]) == len(D) + 1
     for a, b in zip(db[mem.data], D[50:]):
         assert a['text'] == b['text'] and mem.label_header in a
+
+
+def test_upload_unique():
+    mem = CONFIG({CONFIG.username: 'xxx', 'label_header': 'class'})
+    D = list(tweet_iterator(TWEETS))
+    for x in D:
+        x['class'] = 1
+    CONFIG.db['xxx'] = {mem.data: D, mem.permanent: []}
+    _ = [json.dumps(x) for x in D[:15]]
+    content_str = str(base64.b64encode(bytes('\n'.join(_),
+                                       encoding='utf-8')),
+                      encoding='utf-8')
+    content = f'NA,{content_str}'
+    _ = upload(mem, content, 'es')
+    db = CONFIG.db['xxx']
+    assert len(db[mem.permanent]) == 0
 
 
 def test_upload_component():

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from IngeoDash.annotate import flip_label, label_column, store
-from IngeoDash.config import CONFIG
+from IngeoDash.config import CONFIG, Config
+from dash import dcc, dash_table, html
 from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
 from dash import Patch
 import string
 import json
@@ -27,29 +29,49 @@ def mock_data():
             for x in tweet_iterator(TWEETS) if x['klass'] in ['P', 'N']]
 
 
-def process_manager(mem,
-                    triggered_id=None,
-                    next=None):
-    if triggered_id == mem.next:
-        store(mem)
-        db = CONFIG.db[mem[mem.username]]
-        init = mem[mem.n]
-        data = db[mem.original]
-        if len(data):
-            rest = data[mem.n_value:]
-            data = data[:mem.n_value]
-            mem[mem.n] = init + mem.n_value
-        else:
-            data = []
-            rest = []
-        db[mem.data] = data
-        db[mem.original] = rest
-        label_column(mem)        
-        return json.dumps(mem.mem)
-    raise PreventUpdate
+def table_next(mem: Config):
+    store(mem)
+    db = CONFIG.db[mem[mem.username]]
+    init = mem[mem.n]
+    data = db[mem.original]
+    if len(data):
+        rest = data[mem.n_value:]
+        data = data[:mem.n_value]
+        mem[mem.n] = init + mem.n_value
+    else:
+        data = []
+        rest = []
+    db[mem.data] = data
+    db[mem.original] = rest
+    label_column(mem)        
+    return json.dumps(mem.mem)
 
 
-def user(mem):
+def table(mem: Config):
+    if mem.username in mem:
+        data = CONFIG.db[mem[mem.username]][mem.data]
+    else:
+        data = [{}]
+    return dash_table.DataTable(data if len(data) else [{}],
+                                style_data={'whiteSpace': 'normal',
+                                            'textAlign': 'left',
+                                            'height': 'auto'},
+                                style_header={'fontWeight': 'bold',
+                                              'textAlign': 'left'},
+                                id=CONFIG.data)
+
+
+def table_component():
+    return dbc.Stack([dbc.Progress(value=0, id=CONFIG.progress),
+                      html.Div(id=CONFIG.center,
+                               children=table(CONFIG)),
+                      dbc.Button('Next', 
+                                 color='primary', 
+                                 id=CONFIG.next,
+                                 n_clicks=0)])
+
+
+def user(mem: Config):
     try:
         username = mem[mem.username]
     except KeyError:
@@ -67,15 +89,7 @@ def user(mem):
     return username, db
            
 
-def download(mem, filename):
-    db = CONFIG.db[mem[mem.username]]
-    permanent = db.get(mem.permanent, list())
-    data = db.get(mem.data, list())
-    _ = [json.dumps(x) for x in permanent + data]
-    return dict(content='\n'.join(_), filename=filename)
-
-
-def progress(mem):
+def progress(mem: Config):
     if mem.size not in mem:
         return 0
     tot = mem[mem.size]
@@ -85,9 +99,29 @@ def progress(mem):
     return np.ceil(100 * n / tot)
 
 
-def update_row(mem, table):
+def update_row(mem: Config, table: dict):
     data = flip_label(mem, k=table['row'])
     patch = Patch()
     del patch[table['row']]
     patch.insert(table['row'], data)
     return patch
+
+
+def download(mem: Config, filename: str):
+    db = CONFIG.db[mem[mem.username]]
+    permanent = db.get(mem.permanent, list())
+    data = db.get(mem.data, list())
+    _ = [json.dumps(x) for x in permanent + data]
+    return dict(content='\n'.join(_), filename=filename)
+
+
+def download_component():
+    return dbc.InputGroup([dcc.Download(id=CONFIG.download),
+                           dbc.InputGroupText('Filename:'),
+                           dbc.Input(placeholder='output.json',
+                                     value='output.json',
+                                     type='text',
+                                     id=CONFIG.filename),
+                           dbc.Button('Download',
+                                      color='success',
+                                      id=CONFIG.save)])    

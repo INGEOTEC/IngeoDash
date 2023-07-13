@@ -19,6 +19,7 @@ import json
 
 @dataclass
 class Config:
+    store: str = 'store'
     labels: str = 'labels'
     label_header: str = 'klass'
     data: str = 'corpus'

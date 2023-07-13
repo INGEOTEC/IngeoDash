@@ -17,7 +17,8 @@ from IngeoDash.config import CONFIG
 
 def test_Config():
     conf = Config()
-    default = dict(labels='labels',
+    default = dict(store='store',
+                   labels='labels',
                    label_header='klass',
                    data='corpus',
                    permanent='permanent',

@@ -11,27 +11,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.config import CONFIG
+from IngeoDash.config import CONFIG, Config
 from IngeoDash.app import user, label_column
-from EvoMSA import DenseBoW
 from EvoMSA.utils import MODEL_LANG
-from dash import Output, Input, callback, State, dcc
+from dash import dcc
+import numpy as np
 import dash_bootstrap_components as dbc
 import base64
 import io
 import json
 
 
-def upload(mem, content, lang='es'):
+def read_json(mem: Config, data):
+    _ = io.StringIO(data.decode('utf-8'))
+    return [json.loads(x) for x in _]
+
+
+def upload(mem: Config, content, lang='es', 
+           type='json', call_next=label_column):
+    def _label(x):
+        if mem.label_header in x:
+            ele = x[mem.label_header]
+            if ele is not None and len(f'{ele}'):
+                return True
+        return False
+    
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
-    _ = io.StringIO(decoded.decode('utf-8'))
-    data = [json.loads(x) for x in _]
+    data = globals()[f'read_{type}'](mem, decoded)
     username, db = user(mem)
-
-    original = [x for x in data if mem.label_header not in x]
-    permanent = db.get(mem.permanent, list())
-    permanent.extend([x for x in data if mem.label_header in x])
+    labels = np.unique([x[mem.label_header]
+                        for x in data if _label(x)])
+    if labels.shape[0] > 1:
+        original = [x for x in data if not _label(x)]
+        permanent = db.get(mem.permanent, list())
+        permanent.extend([x for x in data if _label(x)])
+    else:
+        original = data
+        permanent = []
     db[mem.data] = original[:mem.n_value]
     db[mem.permanent] = permanent
     db[mem.original] = original[mem.n_value:]
@@ -39,25 +56,9 @@ def upload(mem, content, lang='es'):
                mem.lang: lang,
                mem.size: len(original), 
                mem.username: username}
-    if lang not in mem.denseBoW:
-        dense = DenseBoW(lang=lang, voc_size_exponent=15,
-                         n_jobs=mem.n_jobs,
-                         dataset=False)
-        CONFIG.denseBoW[lang] = dense.text_representations
-    label_column(mem)
+    if call_next is not None:
+        call_next(mem)
     return json.dumps(mem.mem)
-
-
-@callback(
-    Output('store', 'data', allow_duplicate=True),
-    Input(CONFIG.upload, 'contents'),
-    State(CONFIG.lang, 'value'),
-    State('store', 'data'),
-    prevent_initial_call=True
-)
-def upload_callback(content, lang, mem):
-    mem = CONFIG(mem)
-    return upload(mem, content, lang)
 
 
 def upload_component():

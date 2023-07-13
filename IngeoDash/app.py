@@ -15,10 +15,7 @@ from IngeoDash.annotate import flip_label, label_column, store
 from IngeoDash.config import CONFIG
 from dash.exceptions import PreventUpdate
 from dash import Patch
-from EvoMSA import DenseBoW
-import base64
 import string
-import io
 import json
 import numpy as np
 
@@ -32,13 +29,8 @@ def mock_data():
 
 def process_manager(mem,
                     triggered_id=None,
-                    next=None,
-                    content=None,
-                    lang='es'):
-    if triggered_id == mem.upload:
-        upload(mem, content, lang=lang)
-        return json.dumps(mem.mem)
-    elif triggered_id == mem.next:
+                    next=None):
+    if triggered_id == mem.next:
         store(mem)
         db = CONFIG.db[mem[mem.username]]
         init = mem[mem.n]
@@ -74,31 +66,6 @@ def user(mem):
         CONFIG.db[username] = db
     return username, db
            
-
-def upload(mem, content, lang='es'):
-    content_type, content_string = content.split(',')
-    decoded = base64.b64decode(content_string)
-    _ = io.StringIO(decoded.decode('utf-8'))
-    data = [json.loads(x) for x in _]
-    username, db = user(mem)
-
-    original = [x for x in data if mem.label_header not in x]
-    permanent = db.get(mem.permanent, list())
-    permanent.extend([x for x in data if mem.label_header in x])
-    db[mem.data] = original[:mem.n_value]
-    db[mem.permanent] = permanent
-    db[mem.original] = original[mem.n_value:]
-    mem.mem = {mem.n: mem.n_value,
-               mem.lang: lang,
-               mem.size: len(original), 
-               mem.username: username}
-    if lang not in mem.denseBoW:
-        dense = DenseBoW(lang=lang, voc_size_exponent=15,
-                         n_jobs=mem.n_jobs,
-                         dataset=False)
-        CONFIG.denseBoW[lang] = dense.text_representations
-    label_column(mem)
-
 
 def download(mem, filename):
     db = CONFIG.db[mem[mem.username]]

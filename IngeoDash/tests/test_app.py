@@ -11,15 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, process_manager, download, progress, upload, user, update_row
+from IngeoDash.app import mock_data, process_manager, download, progress, user, update_row
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
 from EvoMSA.tests.test_base import TWEETS
-from microtc.utils import tweet_iterator
-import base64
-import json
-import string
 
 
 def test_mock_data():
@@ -39,41 +35,6 @@ def test_user():
     mem = CONFIG({CONFIG.username: username})
     username, db = user(mem)
     assert 'hola' in CONFIG.db[username]
-
-
-def test_process_manager_upload():
-    mem = CONFIG({})
-    D = mock_data()
-    _ = [json.dumps(x) for x in D]
-    content_str = str(base64.b64encode(bytes('\n'.join(_),
-                                       encoding='utf-8')),
-                      encoding='utf-8')
-    _ = process_manager(mem,
-                        mem.upload,
-                        None,
-                        f'NA,{content_str}')
-    info = json.loads(_)
-    db = CONFIG.db[info[mem.username]]
-    for a, b in zip(db[mem.data], D):
-        assert a['text'] == b['text'] and mem.label_header in a
-
-
-def test_upload():
-    mem = CONFIG({CONFIG.username: 'xxx'})
-    mem.label_header = 'klass'
-    D = list(tweet_iterator(TWEETS))
-    CONFIG.db['xxx'] = {mem.permanent: [D[-1]]}
-    D1 = [dict(text=x['text']) for x in D[50:]]
-    _ = [json.dumps(x) for x in D[:50] + D1]
-    content_str = str(base64.b64encode(bytes('\n'.join(_),
-                                       encoding='utf-8')),
-                      encoding='utf-8')
-    content = f'NA,{content_str}'
-    upload(mem, content)
-    db = CONFIG.db[mem[mem.username]]
-    assert len(db[mem.data]) == mem.n_value
-    assert len(db[mem.permanent]) == 51
-    assert len(db[mem.data]) + len(db[mem.original]) + len(db[mem.permanent]) == len(D) + 1
 
 
 def test_process_manager_next():

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from IngeoDash.app import process_manager, download, progress, update_row
+from IngeoDash.upload import upload_component
 from IngeoDash.config import CONFIG
 from EvoMSA.utils import MODEL_LANG
 from dash import dcc, Output, Input, callback, ctx, Dash, State, dash_table, html
@@ -21,17 +22,12 @@ import dash_bootstrap_components as dbc
 @callback(
     Output('store', 'data'),
     Input(CONFIG.next, 'n_clicks'),
-    Input(CONFIG.upload, 'contents'),
-    State(CONFIG.lang, 'value'),
     State('store', 'data'),
     prevent_initial_call=True)
 def process_manager_callback(next,
-                             content,
-                             lang,
                              mem):
     mem = CONFIG(mem)
-    return process_manager(mem, ctx.triggered_id,
-                           next, content, lang)
+    return process_manager(mem, ctx.triggered_id, next)
 
 
 @callback(
@@ -86,9 +82,6 @@ def download_callback(_, filename, mem):
 def run():
     app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
                suppress_callback_exceptions=True)
-    lang = dbc.Select(id=CONFIG.lang, value='es',
-                      options=[dict(label=x, value=x) for x in MODEL_LANG])
-
     download_grp = dbc.InputGroup([dbc.InputGroupText('Filename:'),
                                    dbc.Input(placeholder='output.json',
                                              value='output.json',
@@ -97,9 +90,6 @@ def run():
                                    dbc.Button('Download',
                                               color='success',
                                               id=CONFIG.save)])
-    upload = dbc.InputGroup([dbc.InputGroupText('Language:'),
-                             lang, dcc.Upload(id=CONFIG.upload, 
-                                              children=dbc.Button('Upload'))])
     app.layout = dbc.Container([dcc.Loading(children=dcc.Store('store'),
                                             fullscreen=True), 
                                 dcc.Download(id=CONFIG.download),
@@ -112,7 +102,7 @@ def run():
                                                               id=CONFIG.next,
                                                               n_clicks=0)])),
                                 dbc.Row(download_grp),
-                                dbc.Row(upload)])
+                                dbc.Row(upload_component())])
     app.run_server(debug=True)
 
 

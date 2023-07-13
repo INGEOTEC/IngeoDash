@@ -1,4 +1,4 @@
 [run]
 omit =
     */tests*
-    __main__.py
+    IngeoDash/__main__.py

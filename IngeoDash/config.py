@@ -40,8 +40,7 @@ class Config:
     denseBoW: dict = field(default_factory=dict)
     db: dict = field(default_factory=dict)
     username: str = 'username'
-
-
+    text: str = 'text'
     mem: dict = field(default_factory=dict)
 
     def __getitem__(self, key):
@@ -54,6 +53,9 @@ class Config:
         cls = deepcopy(self)
         if value is not None:
             cls.mem = json.loads(value) if isinstance(value, str) else value
+        for key in ['label_header', 'text']:
+            if key in cls.mem:
+                setattr(cls, key, cls.mem[key])
         return cls
     
     def __contains__(self, key):

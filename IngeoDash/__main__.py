@@ -13,9 +13,8 @@
 # limitations under the License.
 from IngeoDash.app import process_manager, download, progress, update_row
 from IngeoDash.config import CONFIG
-from IngeoDash.annotate import flip_label
 from EvoMSA.utils import MODEL_LANG
-from dash import dcc, Output, Input, callback, ctx, Dash, State, dash_table, html, Patch
+from dash import dcc, Output, Input, callback, ctx, Dash, State, dash_table, html
 import dash_bootstrap_components as dbc
 
 

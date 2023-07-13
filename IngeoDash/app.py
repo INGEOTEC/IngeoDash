@@ -14,6 +14,7 @@
 from IngeoDash.annotate import flip_label, label_column, store
 from IngeoDash.config import CONFIG
 from dash.exceptions import PreventUpdate
+from dash import Patch
 from EvoMSA import DenseBoW
 import base64
 import string
@@ -114,4 +115,12 @@ def progress(mem):
     if tot == 0:
         return 100
     n = mem[mem.n]
-    return np.ceil(100 * n / tot)    
+    return np.ceil(100 * n / tot)
+
+
+def update_row(mem, table):
+    data = flip_label(mem, k=table['row'])
+    patch = Patch()
+    del patch[table['row']]
+    patch.insert(table['row'], data)
+    return patch

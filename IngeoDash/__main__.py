@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import process_manager, download, progress
+from IngeoDash.app import process_manager, download, progress, update_row
 from IngeoDash.config import CONFIG
 from IngeoDash.annotate import flip_label
 from EvoMSA.utils import MODEL_LANG
@@ -69,13 +69,9 @@ def progress_callback(mem):
     State('store', 'data'),
     prevent_initial_call=True
 )
-def update_table(table, mem):
+def update_row_callback(table, mem):
     mem = CONFIG(mem)
-    data = flip_label(mem, k=table['row'])
-    patch = Patch()
-    del patch[table['row']]
-    patch.insert(table['row'], data)
-    return patch
+    return update_row(mem, table)
 
 
 @callback(Output(CONFIG.download, 'data'),
@@ -102,7 +98,8 @@ def run():
                                    dbc.Button('Download',
                                               color='success',
                                               id=CONFIG.save)])
-    upload = dbc.InputGroup([lang, dcc.Upload(id=CONFIG.upload, 
+    upload = dbc.InputGroup([dbc.InputGroupText('Language:'),
+                             lang, dcc.Upload(id=CONFIG.upload, 
                                               children=dbc.Button('Upload'))])
     app.layout = dbc.Container([dcc.Loading(children=dcc.Store('store'),
                                             fullscreen=True), 

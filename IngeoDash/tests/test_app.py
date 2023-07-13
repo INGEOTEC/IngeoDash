@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, process_manager, download, progress, upload, user
+from IngeoDash.app import mock_data, process_manager, download, progress, upload, user, update_row
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
@@ -110,4 +110,13 @@ def test_progress():
     mem[mem.size] = 10
     mem[mem.n] = 1
     assert progress(mem) == 10
-    
+
+
+def test_update_row():
+    from dash import Patch
+    D = mock_data()
+    mem = CONFIG({CONFIG.username: 'xxx'})
+    CONFIG.db['xxx'] = {mem.data: D[:10]}
+    label_column(mem)    
+    _ = update_row(mem, dict(row=0))
+    assert isinstance(_, Patch)    

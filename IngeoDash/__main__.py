@@ -72,12 +72,15 @@ def download_callback(_, filename, mem):
     Output(CONFIG.store, 'data', allow_duplicate=True),
     Input(CONFIG.upload, 'contents'),
     State(CONFIG.lang, 'value'),
+    State(CONFIG.text, 'value'),
+    State(CONFIG.label_header, 'value'),
     State(CONFIG.store, 'data'),
     prevent_initial_call=True
 )
-def upload_callback(content, lang, mem):
+def upload_callback(content, lang, text, label, mem):
     mem = CONFIG(mem)
-    return upload(mem, content, lang=lang)
+    return upload(mem, content, lang=lang,
+                  text=text, label=label)
 
 
 def run():

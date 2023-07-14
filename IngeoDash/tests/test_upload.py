@@ -16,6 +16,7 @@ from IngeoDash.annotate import label_column
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
+import numpy as np
 import base64
 import json
 
@@ -34,15 +35,17 @@ def test_upload():
     _ = upload(mem, content, 'es')
     info = json.loads(_)
     db = CONFIG.db[info[mem.username]]
+    assert info[mem.size] == 50 + len(D1)
     assert len(db[mem.data]) == mem.n_value
     assert len(db[mem.permanent]) == 51
     assert len(db[mem.data]) + len(db[mem.original]) + len(db[mem.permanent]) == len(D) + 1
     for a, b in zip(db[mem.data], D[50:]):
         assert a['text'] == b['text'] and mem.label_header in a
+    
 
 
 def test_upload_unique():
-    mem = CONFIG({CONFIG.username: 'xxx', 'label_header': 'class'})
+    mem = CONFIG({CONFIG.username: 'xxx'})
     D = list(tweet_iterator(TWEETS))
     for x in D:
         x['class'] = 1
@@ -52,9 +55,27 @@ def test_upload_unique():
                                        encoding='utf-8')),
                       encoding='utf-8')
     content = f'NA,{content_str}'
-    _ = upload(mem, content, 'es')
+    _ = upload(mem, content, lang='es', label='class')
     db = CONFIG.db['xxx']
     assert len(db[mem.permanent]) == 0
+
+
+def test_upload_labels():
+    mem = CONFIG({CONFIG.username: 'xxx'})
+    D = list(tweet_iterator(TWEETS))
+    _ = [json.dumps(x) for x in D]
+    content_str = str(base64.b64encode(bytes('\n'.join(_),
+                                       encoding='utf-8')),
+                      encoding='utf-8')
+    content = f'NA,{content_str}'
+    _ = upload(mem, content, lang='es')
+    db = CONFIG.db['xxx']
+    assert len(db[mem.data]) == 0
+    assert len(db[mem.original]) == 0
+    klasses = np.unique([x['klass'] for x in D])
+    mem = CONFIG(_)
+    assert mem[mem.labels] == klasses.tolist()
+
 
 
 def test_upload_component():

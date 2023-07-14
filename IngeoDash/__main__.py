@@ -11,21 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import table_next, download, progress, update_row, download_component, table, table_component
+from IngeoDash.app import table_next, download, progress, update_row, download_component, table, table_component, table_prev
 from IngeoDash.upload import upload, upload_component
 from IngeoDash.config import CONFIG
-from dash import dcc, Output, Input, callback, Dash, State
+from dash import dcc, Output, Input, callback, Dash, State, ctx
 import dash_bootstrap_components as dbc
 
 
 @callback(
     Output(CONFIG.store, 'data'),
     Input(CONFIG.next, 'n_clicks'),
+    Input(CONFIG.prev, 'n_clicks'),    
     State(CONFIG.store, 'data'),
-    prevent_initial_call=True)
-def table_next_callback(next, mem):
+    prevent_initial_call=True
+)
+def table_next_callback(next, prev, mem):
     mem = CONFIG(mem)
-    return table_next(mem)
+    if ctx.triggered_id == mem.next:
+        return table_next(mem)
+    return table_prev(mem)
 
 
 @callback(

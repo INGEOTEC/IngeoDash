@@ -55,9 +55,8 @@ def upload(mem: Config, content, lang='es',
     db[mem.data] = original[:mem.n_value]
     db[mem.permanent] = permanent
     db[mem.original] = original[mem.n_value:]
-    mem.mem.update({mem.n: mem.n_value,
-                    mem.lang: lang,
-                    mem.size: len(original),
+    mem.mem.update({mem.lang: lang,
+                    mem.size: len(data),
                     mem.username: username})
     if call_next is not None:
         call_next(mem)

@@ -26,7 +26,6 @@ def test_Config():
                    next='next',
                    next_label='Next',
                    n_value=10,
-                   n='N',
                    size='size',
                    progress='progress',
                    download='download',
@@ -40,7 +39,8 @@ def test_Config():
                    db={},
                    username='username',
                    text='text',
-                   mem={})
+                   mem={},
+                   prev='previous')
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -66,9 +66,10 @@ def test_Config_call():
 
 def test_Config_call2():
     mem = CONFIG(dict(label_header='label',
-                      text='texto'))
+                      text='texto', n_value=12))
     assert mem.label_header == 'label'
     assert mem.text == 'texto'
+    assert mem.n_value == 12
 
 
 def test_CONFIG():

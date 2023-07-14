@@ -1,0 +1,4 @@
+[run]
+omit =
+    */tests*
+    IngeoDash/__main__.py

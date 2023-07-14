@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, table_next, download, progress, user, update_row, download_component, table_component
+from IngeoDash.app import mock_data, table_next, download, progress, user, update_row, download_component, table_component, table_prev
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
@@ -39,8 +39,7 @@ def test_user():
 
 def test_table_next():
     D = mock_data()[:15]
-    mem = CONFIG({CONFIG.username: 'xxx',
-                  CONFIG.n: CONFIG.n_value})
+    mem = CONFIG({CONFIG.username: 'xxx'})
     CONFIG.db['xxx'] = {mem.data: D[:mem.n_value],
                         mem.original: D[mem.n_value:]}
     db = CONFIG.db['xxx']
@@ -48,11 +47,33 @@ def test_table_next():
     size = len(D)
     _ = table_next(mem)
     assert len(db[mem.permanent]) == mem.n_value
-    assert mem[mem.n] == 2 * mem.n_value
     assert len(db[mem.data]) == 5
     _ = table_next(mem)
     assert len(db[mem.data]) == 0
     assert len(db[mem.original]) == 0
+
+
+def test_table_prev():
+    mem = CONFIG({CONFIG.username: 'xxx', 'n_value': 10})
+    CONFIG.db['xxx'] = {mem.permanent: [0] * 11,
+                        mem.data: [1] * 10,
+                        mem.original: [2] * 10}
+    table_prev(mem)
+    db = CONFIG.db['xxx']
+    assert len(db[mem.permanent]) == 1
+    assert db[mem.permanent] == [0]
+    assert len(db[mem.data]) ==  10 and db[mem.data] == [0] * 10
+    assert len(db[mem.original]) == 20
+    assert db[mem.original] == ([1] * 10) + ([2] * 10)
+    CONFIG.db['xxx'].update({mem.permanent: []})
+    table_prev(mem)
+    assert len(db[mem.permanent]) == 0
+    CONFIG.db['xxx'].update({mem.permanent: [0] * 5,
+                             mem.data: [1] * 10,
+                             mem.original: [2] * 10})
+    table_prev(mem)    
+    assert len(db[mem.permanent]) == 0
+    assert len(db[mem.data]) ==  5 and db[mem.data] == [0] * 5
 
 
 def test_download(): 
@@ -77,11 +98,12 @@ def test_table_component():
 
 
 def test_progress():
-    mem = Config()
+    mem = CONFIG({})
     assert progress(mem) == 0
-    mem[mem.size] = 10
-    mem[mem.n] = 1
-    assert progress(mem) == 10
+    mem.mem.update({CONFIG.username: 'xxx'})
+    CONFIG.db['xxx'] = {mem.data: [None] * 10,
+                        mem.original: [None] * 10}    
+    assert progress(mem) == 50
 
 
 def test_update_row():

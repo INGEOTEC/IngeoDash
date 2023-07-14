@@ -29,21 +29,37 @@ def mock_data():
             for x in tweet_iterator(TWEETS) if x['klass'] in ['P', 'N']]
 
 
-def table_next(mem: Config):
+def table_next(mem: Config, call_next=label_column):
     store(mem)
     db = CONFIG.db[mem[mem.username]]
-    init = mem[mem.n]
     data = db[mem.original]
     if len(data):
         rest = data[mem.n_value:]
         data = data[:mem.n_value]
-        mem[mem.n] = init + mem.n_value
     else:
         data = []
         rest = []
     db[mem.data] = data
     db[mem.original] = rest
-    label_column(mem)        
+    if call_next is not None:
+        call_next(mem)       
+    return json.dumps(mem.mem)
+
+
+def table_prev(mem: Config):
+    db = CONFIG.db[mem[mem.username]]
+    nvalue = mem.n_value
+    if mem.permanent not in db:
+        return json.dumps(mem.mem)
+    permanent = db[mem.permanent]
+    if len(permanent) == 0:
+        return json.dumps(mem.mem)
+    nvalue = nvalue if len(permanent) >= nvalue else len(permanent)
+    data = db[mem.data] if mem.data in db else []
+    original = db[mem.original] if mem.original in db else []
+    db[mem.original] = data + original
+    db[mem.data] = permanent[-nvalue:]
+    db[mem.permanent] = permanent[:-nvalue]
     return json.dumps(mem.mem)
 
 
@@ -62,13 +78,18 @@ def table(mem: Config):
 
 
 def table_component():
-    return dbc.Stack([dbc.Progress(value=0, id=CONFIG.progress),
-                      html.Div(id=CONFIG.center,
-                               children=table(CONFIG)),
+    buttons = dbc.ButtonGroup([dbc.Button('Previous',
+                                 color='secondary',
+                                 id=CONFIG.prev),
                       dbc.Button('Next', 
                                  color='primary', 
                                  id=CONFIG.next,
                                  n_clicks=0)])
+    return dbc.Stack([dbc.Progress(value=0, id=CONFIG.progress),
+                      html.Div(id=CONFIG.center,
+                               children=table(CONFIG)),
+                      buttons
+                      ])
 
 
 def user(mem: Config):
@@ -90,13 +111,15 @@ def user(mem: Config):
            
 
 def progress(mem: Config):
-    if mem.size not in mem:
+    if mem.username not in mem:
         return 0
-    tot = mem[mem.size]
+    db = CONFIG.db[mem[mem.username]]
+    data = len(db[mem.data]) if mem.data in db else 0
+    ori = len(db[mem.original]) if mem.original in db else 0
+    tot = mem[mem.size] if mem.size in mem else data + ori 
     if tot == 0:
-        return 100
-    n = mem[mem.n]
-    return np.ceil(100 * n / tot)
+        return 0
+    return np.ceil(100 * (tot - ori) / tot)
 
 
 def update_row(mem: Config, table: dict):

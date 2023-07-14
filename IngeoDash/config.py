@@ -28,7 +28,6 @@ class Config:
     next: str = 'next'
     next_label: str = 'Next'
     n_value: int = 10
-    n: str = 'N'
     size: str = 'size'
     progress: str = 'progress'
     download: str = 'download'
@@ -43,6 +42,7 @@ class Config:
     username: str = 'username'
     text: str = 'text'
     mem: dict = field(default_factory=dict)
+    prev: str='previous'
 
     def __getitem__(self, key):
         return self.mem[key]
@@ -54,7 +54,7 @@ class Config:
         cls = deepcopy(self)
         if value is not None:
             cls.mem = json.loads(value) if isinstance(value, str) else value
-        for key in ['label_header', 'text']:
+        for key in ['label_header', 'text', 'n_value']:
             if key in cls.mem:
                 setattr(cls, key, cls.mem[key])
         return cls

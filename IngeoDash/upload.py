@@ -28,14 +28,17 @@ def read_json(mem: Config, data):
 
 
 def upload(mem: Config, content, lang='es', 
-           type='json', call_next=label_column):
+           type='json', text='text', label='klass',
+           call_next=label_column):
     def _label(x):
         if mem.label_header in x:
             ele = x[mem.label_header]
             if ele is not None and len(f'{ele}'):
                 return True
         return False
-    
+    mem.mem.update(dict(label_header=label, text=text))
+    mem.label_header = label
+    mem.text = text
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
     data = globals()[f'read_{type}'](mem, decoded)
@@ -52,10 +55,9 @@ def upload(mem: Config, content, lang='es',
     db[mem.data] = original[:mem.n_value]
     db[mem.permanent] = permanent
     db[mem.original] = original[mem.n_value:]
-    mem.mem = {mem.n: mem.n_value,
-               mem.lang: lang,
-               mem.size: len(original), 
-               mem.username: username}
+    mem.mem.update({mem.lang: lang,
+                    mem.size: len(data),
+                    mem.username: username})
     if call_next is not None:
         call_next(mem)
     return json.dumps(mem.mem)
@@ -64,9 +66,17 @@ def upload(mem: Config, content, lang='es',
 def upload_component():
     lang = dbc.Select(id=CONFIG.lang, value='es',
                       options=[dict(label=x, value=x) for x in MODEL_LANG])
-
     upload = dbc.InputGroup([dbc.InputGroupText('Language:'),
-                             lang, dcc.Upload(id=CONFIG.upload, 
-                                              children=dbc.Button('Upload'))])
+                             lang, 
+                             dbc.InputGroupText('Text Column:'),
+                             dcc.Input(id=CONFIG.text,
+                                       value='text',
+                                       type='text'),
+                             dbc.InputGroupText('Text Label:'),
+                             dcc.Input(id=CONFIG.label_header,
+                                       value='klass',
+                                       type='text'),
+                             dcc.Upload(id=CONFIG.upload, 
+                                        children=dbc.Button('Upload'))])
     return upload
 

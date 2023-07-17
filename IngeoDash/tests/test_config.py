@@ -40,7 +40,8 @@ def test_Config():
                    username='username',
                    text='text',
                    mem={},
-                   prev='previous')
+                   prev='previous',
+                   batch_size='n_value')
     for k, v in default.items():
         assert v == getattr(conf, k)
 

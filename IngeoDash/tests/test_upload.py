@@ -49,15 +49,18 @@ def test_upload_unique():
     D = list(tweet_iterator(TWEETS))
     for x in D:
         x['class'] = 1
-    CONFIG.db['xxx'] = {mem.data: D, mem.permanent: []}
+    CONFIG.db['xxx'] = {}
     _ = [json.dumps(x) for x in D[:15]]
     content_str = str(base64.b64encode(bytes('\n'.join(_),
                                        encoding='utf-8')),
                       encoding='utf-8')
     content = f'NA,{content_str}'
-    _ = upload(mem, content, lang='es', label='class')
+    _ = upload(mem, content, lang='es',
+               label='class', n_value=3)
     db = CONFIG.db['xxx']
     assert len(db[mem.permanent]) == 0
+    assert len(db[mem.data]) + len(db[mem.original]) == 15
+    assert len(db[mem.data]) == 3
 
 
 def test_upload_labels():
@@ -81,4 +84,4 @@ def test_upload_labels():
 def test_upload_component():
     import dash_bootstrap_components as dbc
     component = upload_component()
-    assert isinstance(component, dbc.InputGroup)
+    assert isinstance(component, dbc.Col)

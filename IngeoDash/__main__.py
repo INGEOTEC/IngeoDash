@@ -79,16 +79,27 @@ def download_callback(_, filename, mem):
     State(CONFIG.lang, 'value'),
     State(CONFIG.text, 'value'),
     State(CONFIG.label_header, 'value'),
+    State(CONFIG.batch_size, 'value'),
     State(CONFIG.store, 'data'),
     prevent_initial_call=True
 )
-def upload_callback(content, lang, text, label, mem):
+def upload_callback(content, lang, 
+                    text, label, n_value,
+                    mem):
     mem = CONFIG(mem)
     return upload(mem, content, lang=lang,
-                  text=text, label=label)
+                  text=text, label=label,
+                  n_value=n_value)
 
 
-def run():
+def test_component(component):
+    app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
+               suppress_callback_exceptions=True)
+    app.layout = dbc.Container([dbc.Row(component)])
+    app.run_server(debug=True)
+
+
+def run(debug=True, **kwargs):
     app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
                suppress_callback_exceptions=True)
 
@@ -97,7 +108,7 @@ def run():
                                 dbc.Row(table_component()),
                                 dbc.Row(download_component()),
                                 dbc.Row(upload_component())])
-    app.run_server(debug=True)
+    app.run_server(debug=debug)
 
 
 if __name__ == '__main__':

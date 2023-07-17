@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, table_next, download, progress, user, update_row, download_component, table_component, table_prev
+from IngeoDash.app import mock_data, table_next, progress, user, update_row, table_component, table_prev
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
@@ -74,21 +74,6 @@ def test_table_prev():
     table_prev(mem)    
     assert len(db[mem.permanent]) == 0
     assert len(db[mem.data]) ==  5 and db[mem.data] == [0] * 5
-
-
-def test_download(): 
-    D = mock_data()
-    mem = CONFIG({CONFIG.username: 'xxx'})
-    CONFIG.db['xxx'] = {mem.permanent: D[:11]}
-    _ = download(mem, 'tmp.json')
-    assert _['filename'] == 'tmp.json'
-    assert len(_['content'].split('\n')) == 11
-
-
-def test_download_component():
-    import dash_bootstrap_components as dbc
-    element = download_component()
-    assert isinstance(element, dbc.InputGroup)
 
 
 def test_table_component():

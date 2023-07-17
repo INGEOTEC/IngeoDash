@@ -45,13 +45,12 @@ def upload(mem: Config, content, lang='es',
     username, db = user(mem)
     labels = np.unique([x[mem.label_header]
                         for x in data if _label(x)])
+    permanent = db.get(mem.permanent, list())    
     if labels.shape[0] > 1:
         original = [x for x in data if not _label(x)]
-        permanent = db.get(mem.permanent, list())
         permanent.extend([x for x in data if _label(x)])
     else:
         original = data
-        permanent = []
     db[mem.data] = original[:mem.n_value]
     db[mem.permanent] = permanent
     db[mem.original] = original[mem.n_value:]

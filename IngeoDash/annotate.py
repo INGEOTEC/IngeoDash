@@ -72,7 +72,7 @@ def flip_label(mem: Config, k: int):
 
 def store(mem: Config):
     db = CONFIG.db[mem[mem.username]]
-    data = db.pop(mem.data)
+    data = db.pop(mem.data) if mem.data in db else []
     try:
         permanent = db[mem.permanent]
     except KeyError:

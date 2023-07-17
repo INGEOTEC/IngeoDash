@@ -35,4 +35,9 @@ def download_component():
                                      id=CONFIG.filename),
                            dbc.Button('Download',
                                       color='success',
-                                      id=CONFIG.save)])    
+                                      id=CONFIG.save)])
+
+
+if __name__ == '__main__':
+    from IngeoDash.__main__ import test_component
+    test_component(download_component())

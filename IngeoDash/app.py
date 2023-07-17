@@ -13,8 +13,7 @@
 # limitations under the License.
 from IngeoDash.annotate import flip_label, label_column, store
 from IngeoDash.config import CONFIG, Config
-from dash import dcc, dash_table, html
-from dash.exceptions import PreventUpdate
+from dash import dash_table, html
 import dash_bootstrap_components as dbc
 from dash import Patch
 import string
@@ -130,21 +129,4 @@ def update_row(mem: Config, table: dict):
     return patch
 
 
-def download(mem: Config, filename: str):
-    db = CONFIG.db[mem[mem.username]]
-    permanent = db.get(mem.permanent, list())
-    data = db.get(mem.data, list())
-    _ = [json.dumps(x) for x in permanent + data]
-    return dict(content='\n'.join(_), filename=filename)
 
-
-def download_component():
-    return dbc.InputGroup([dcc.Download(id=CONFIG.download),
-                           dbc.InputGroupText('Filename:'),
-                           dbc.Input(placeholder='output.json',
-                                     value='output.json',
-                                     type='text',
-                                     id=CONFIG.filename),
-                           dbc.Button('Download',
-                                      color='success',
-                                      id=CONFIG.save)])    

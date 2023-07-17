@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import table_next, download, progress, update_row, download_component, table, table_component, table_prev
+from IngeoDash.app import table_next, progress, update_row, table, table_component, table_prev
+from IngeoDash.download import download, download_component
 from IngeoDash.upload import upload, upload_component
 from IngeoDash.config import CONFIG
 from dash import dcc, Output, Input, callback, Dash, State, ctx

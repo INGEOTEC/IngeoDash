@@ -83,6 +83,7 @@ def test_upload_shuffle():
 
 def test_upload_labels():
     mem = CONFIG({CONFIG.username: 'xxx'})
+    CONFIG.db['xxx'] = {}
     D = list(tweet_iterator(TWEETS))
     _ = [json.dumps(x) for x in D]
     content_str = str(base64.b64encode(bytes('\n'.join(_),

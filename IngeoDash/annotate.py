@@ -18,6 +18,14 @@ from IngeoDash.config import CONFIG
 import numpy as np
 
 
+def has_label(mem: Config, x):
+    if mem.label_header in x:
+        ele = x[mem.label_header]
+        if ele is not None and len(f'{ele}'):
+            return True
+    return False
+
+
 def model(mem: Config, data: dict):
     lang = mem[mem.lang]
     if lang not in CONFIG.denseBoW:
@@ -36,7 +44,7 @@ def model(mem: Config, data: dict):
 def label_column_predict(mem: Config, model=None):
     db = CONFIG.db[mem[mem.username]]
     data = db[mem.data]
-    if len(data) == 0:
+    if len(data) == 0 or np.all([has_label(mem, x) for x in data]):
         return   
     D = db[mem.permanent]
     dense = model(mem, D)

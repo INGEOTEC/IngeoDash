@@ -63,8 +63,27 @@ def test_upload_unique():
     assert len(db[mem.data]) == 3
 
 
+def test_upload_shuffle():
+    mem = CONFIG({CONFIG.username: 'xxx'})
+    D = list(tweet_iterator(TWEETS))[:15]
+    for k, x in enumerate(D):
+        x['klass'] = k
+    CONFIG.db['xxx'] = {}
+    _ = [json.dumps(x) for x in D]
+    content_str = str(base64.b64encode(bytes('\n'.join(_),
+                                       encoding='utf-8')),
+                      encoding='utf-8')
+    content = f'NA,{content_str}'
+    _ = upload(mem, content, lang='es',
+               shuffle=1, n_value=3)
+    db = CONFIG.db['xxx']
+    _ = [x['klass'] for x in db[mem.permanent]]
+    assert _ != list(range(len(D)))
+
+
 def test_upload_labels():
     mem = CONFIG({CONFIG.username: 'xxx'})
+    CONFIG.db['xxx'] = {}
     D = list(tweet_iterator(TWEETS))
     _ = [json.dumps(x) for x in D]
     content_str = str(base64.b64encode(bytes('\n'.join(_),
@@ -77,6 +96,7 @@ def test_upload_labels():
     assert len(db[mem.original]) == 0
     klasses = np.unique([x['klass'] for x in D])
     mem = CONFIG(_)
+    print(mem[mem.labels], klasses.tolist())
     assert mem[mem.labels] == klasses.tolist()
 
 

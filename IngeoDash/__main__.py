@@ -80,16 +80,21 @@ def download_callback(_, filename, mem):
     State(CONFIG.text, 'value'),
     State(CONFIG.label_header, 'value'),
     State(CONFIG.batch_size, 'value'),
+    State(CONFIG.shuffle, 'value'),
     State(CONFIG.store, 'data'),
     prevent_initial_call=True
 )
-def upload_callback(content, lang, 
-                    text, label, n_value,
-                    mem):
+def upload_callback(content, lang, text, label, 
+                    n_value, shuffle, mem):
     mem = CONFIG(mem)
+    if isinstance(shuffle, list) and len(shuffle) >= 1:
+        shuffle = shuffle[0]
+    else:
+        shuffle = 0
     return upload(mem, content, lang=lang,
                   text=text, label=label,
-                  n_value=n_value)
+                  n_value=n_value, 
+                  shuffle=shuffle)
 
 
 def test_component(component):

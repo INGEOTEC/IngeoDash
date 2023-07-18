@@ -44,6 +44,7 @@ class Config:
     mem: dict = field(default_factory=dict)
     prev: str='previous'
     batch_size: str='n_value'
+    shuffle: str='shuffle'
 
     def __getitem__(self, key):
         return self.mem[key]

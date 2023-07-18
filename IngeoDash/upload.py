@@ -13,13 +13,15 @@
 # limitations under the License.
 from IngeoDash.config import CONFIG, Config
 from IngeoDash.app import user, table_next
+from IngeoDash.annotate import has_label
 from EvoMSA.utils import MODEL_LANG
 from dash import dcc, html
 import numpy as np
 import dash_bootstrap_components as dbc
+import random
 import base64
-import io
 import json
+import io
 
 
 def read_json(mem: Config, data):
@@ -30,13 +32,7 @@ def read_json(mem: Config, data):
 def upload(mem: Config, content, lang='es', 
            type='json', text='text', 
            label='klass', n_value=CONFIG.n_value,
-           call_next=table_next):
-    def _label(x):
-        if mem.label_header in x:
-            ele = x[mem.label_header]
-            if ele is not None and len(f'{ele}'):
-                return True
-        return False
+           shuffle=0, call_next=table_next):
     mem.mem.update(dict(label_header=label, text=text, n_value=n_value))
     mem.label_header = label
     mem.text = text
@@ -44,13 +40,15 @@ def upload(mem: Config, content, lang='es',
     content_type, content_string = content.split(',')
     decoded = base64.b64decode(content_string)
     data = globals()[f'read_{type}'](mem, decoded)
+    if shuffle:
+        random.shuffle(data)
     username, db = user(mem)
     labels = np.unique([x[mem.label_header]
-                        for x in data if _label(x)])
+                        for x in data if has_label(mem, x)])
     permanent = db.get(mem.permanent, list())    
     if labels.shape[0] > 1:
-        original = [x for x in data if not _label(x)]
-        permanent.extend([x for x in data if _label(x)])
+        original = [x for x in data if not has_label(mem, x)]
+        permanent.extend([x for x in data if has_label(mem, x)])
     else:
         original = data
     db[mem.permanent] = permanent
@@ -87,9 +85,10 @@ def upload_component():
                                dbc.InputGroupText('Batch Size:'),
                                dcc.Input(id=CONFIG.batch_size,
                                          value=10,
-                                         type='number')]) 
-                            #    dcc.Upload(id=CONFIG.upload,
-                            #               children=dbc.Button('Upload'))])
+                                         type='number'),
+                               dbc.Checklist(id=CONFIG.shuffle,
+                                             options=[dict(label='Shuffle', value=1)],
+                                             switch=True)])
     upload_button = dbc.Button(dcc.Upload(id=CONFIG.upload,
                                           children=html.Div('Drop or Select File')))
     return dbc.Col(dbc.Stack([lang_grp, data_grp, upload_button]))

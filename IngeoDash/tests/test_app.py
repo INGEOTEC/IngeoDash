@@ -16,6 +16,8 @@ from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
 from EvoMSA.tests.test_base import TWEETS
+from microtc.utils import tweet_iterator
+import numpy as np
 
 
 def test_mock_data():
@@ -51,6 +53,20 @@ def test_table_next():
     _ = table_next(mem)
     assert len(db[mem.data]) == 0
     assert len(db[mem.original]) == 0
+
+
+def test_table_next_no_predict():
+    D = list(tweet_iterator(TWEETS))
+    for x in D[2*CONFIG.n_value:]:
+        x['klass'] = 'NA'
+    labels = np.unique([x['klass'] for x in D])    
+    mem = CONFIG({CONFIG.username: 'xxx',
+                  CONFIG.lang: 'xx',
+                  CONFIG.labels: labels.tolist()})
+    CONFIG.db['xxx'] = {mem.permanent: D[:mem.n_value],
+                        mem.data: D[mem.n_value:2*mem.n_value],
+                        mem.original: D[2*mem.n_value:]}
+    table_next(mem)
 
 
 def test_table_prev():

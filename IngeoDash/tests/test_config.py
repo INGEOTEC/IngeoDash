@@ -41,7 +41,8 @@ def test_Config():
                    text='text',
                    mem={},
                    prev='previous',
-                   batch_size='n_value')
+                   batch_size='n_value',
+                   shuffle='shuffle')
     for k, v in default.items():
         assert v == getattr(conf, k)
 

@@ -95,6 +95,7 @@ def test_upload_labels():
     assert len(db[mem.original]) == 0
     klasses = np.unique([x['klass'] for x in D])
     mem = CONFIG(_)
+    print(mem[mem.labels], klasses.tolist())
     assert mem[mem.labels] == klasses.tolist()
 
 

@@ -15,7 +15,7 @@ from IngeoDash.config import CONFIG, Config
 from IngeoDash.app import user, table_next
 from IngeoDash.annotate import has_label
 from EvoMSA.utils import MODEL_LANG
-from dash import dcc, html
+from dash import dcc, html, callback, Output, Input
 import numpy as np
 import dash_bootstrap_components as dbc
 import random
@@ -61,6 +61,18 @@ def upload(mem: Config, content, lang='es',
     return json.dumps(mem.mem)
 
 
+@callback(
+    Output(CONFIG.size, 'disabled', allow_duplicate=True),
+    Input(CONFIG.checklist, 'value'),
+    prevent_initial_call=True,
+)
+def active_learning_callback(checklist):
+    checklist = checklist if checklist is not None else []
+    if CONFIG.active_learning in checklist:
+        return False
+    return True
+
+
 def upload_component():
     langs = {'ar': 'Arabic', 'ca': 'Catalan', 'de': 'German', 'en': 'English',
              'es': 'Spanish', 'fr': 'French', 'hi': 'Hindi', 'in': 'Indonesian',
@@ -86,14 +98,29 @@ def upload_component():
                                dcc.Input(id=CONFIG.batch_size,
                                          value=10,
                                          type='number'),
-                               dbc.Checklist(id=CONFIG.shuffle,
-                                             options=[dict(label='Shuffle', value=1)],
+                               dbc.Checklist(id=CONFIG.checklist,
+                                             options=[dict(label='Shuffle', value=CONFIG.shuffle),
+                                                      dict(label='Active Learning',
+                                                           value=CONFIG.active_learning)],
                                              switch=True)])
+    al_grp = dbc.InputGroup([dbc.InputGroupText('Number of labeled elements:'),
+                             dcc.Input(id=CONFIG.size,
+                                       value=1000,
+                                       type='number',
+                                       disabled=True)])
     upload_button = dbc.Button(dcc.Upload(id=CONFIG.upload,
                                           children=html.Div('Drop or Select File')))
-    return dbc.Col(dbc.Stack([lang_grp, data_grp, upload_button]))
+    return dbc.Col(dbc.Stack([lang_grp, data_grp,
+                              al_grp,
+                              upload_button]))
 
 
 if __name__ == '__main__':
     from IngeoDash.__main__ import test_component
     test_component(upload_component())
+    # from dash import Dash
+    # component = upload_component()
+    # app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
+    #            suppress_callback_exceptions=True)
+    # app.layout = dbc.Container([dbc.Row(component)])
+    # app.run_server(debug=True)    

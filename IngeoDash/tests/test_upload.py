@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.upload import upload, upload_component
-from IngeoDash.annotate import label_column
+from IngeoDash.upload import upload, upload_component, active_learning_callback
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -100,6 +99,10 @@ def test_upload_labels():
     assert mem[mem.labels] == klasses.tolist()
 
 
+def test_active_learning_callback():
+    assert active_learning_callback(None)
+    assert not active_learning_callback([CONFIG.active_learning])
+    
 
 def test_upload_component():
     import dash_bootstrap_components as dbc

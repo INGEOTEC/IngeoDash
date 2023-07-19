@@ -42,6 +42,8 @@ def test_Config():
                    mem={},
                    prev='previous',
                    batch_size='n_value',
+                   checklist='checklist',
+                   active_learning='active_learning',
                    shuffle='shuffle')
     for k, v in default.items():
         assert v == getattr(conf, k)

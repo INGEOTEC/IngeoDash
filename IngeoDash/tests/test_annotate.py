@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.annotate import label_column, label_column_predict, flip_label, store, similarity
-from IngeoDash.config import Config
+from IngeoDash.annotate import label_column, flip_label, store, similarity
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -55,6 +54,42 @@ def test_label_column_predict():
     y = np.array([x[mem.label_header] for x in D[10:20]])
     assert (y == hy).mean() >= 0.2
 
+
+def test_predict_active_learning():
+    _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
+         CONFIG.lang: 'es', CONFIG.active_learning: True}
+    mem = CONFIG(_)
+    CONFIG.denseBoW['es'] = DenseBoW(lang='es', 
+                                     voc_size_exponent=15,
+                                     dataset=False).text_representations
+    D = list(tweet_iterator(TWEETS))
+    for k, x in enumerate(D):
+        x['id'] = k
+    for x in D[10:]:
+        del x['klass']
+    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
+                        mem.original: D[20:]}
+    label_column(mem)
+    db = CONFIG.db['xxx']
+    permanent = db[mem.permanent]
+    data = db[mem.data]
+    assert [x['id'] for x in permanent] == list(range(10))
+    assert [x['id'] for x in data] != list(range(10, 20))
+    D = [x for x in tweet_iterator(TWEETS) 
+         if x['klass'] in ['N', 'P']]
+    for k, x in enumerate(D):
+        x['id'] = k
+    for x in D[10:]:
+        del x['klass']    
+    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
+                        mem.original: D[20:]}
+    label_column(mem)
+    db = CONFIG.db['xxx']
+    permanent = db[mem.permanent]
+    data = db[mem.data]
+    assert [x['id'] for x in permanent] == list(range(10))
+    assert [x['id'] for x in data] != list(range(10, 20))
+    
 
 
 def test_flip_label():

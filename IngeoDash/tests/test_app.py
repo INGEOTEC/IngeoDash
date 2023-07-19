@@ -107,6 +107,16 @@ def test_progress():
     assert progress(mem) == 50
 
 
+def test_progress_active_learning():
+    mem = CONFIG({CONFIG.active_learning: True, CONFIG.size: 10})
+    assert progress(mem) == 0
+    mem.mem.update({CONFIG.username: 'xxx'})
+    CONFIG.db['xxx'] = {mem.permanent: [None] * 6,
+                        mem.data: [None] * 1,
+                        mem.original: [None] * 10}    
+    assert progress(mem) == 70
+
+
 def test_update_row():
     from dash import Patch
     D = mock_data()

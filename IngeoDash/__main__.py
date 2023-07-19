@@ -81,18 +81,23 @@ def download_callback(_, filename, mem):
     State(CONFIG.label_header, 'value'),
     State(CONFIG.batch_size, 'value'),
     State(CONFIG.checklist, 'value'),
+    State(CONFIG.size, 'value'),
     State(CONFIG.store, 'data'),
     prevent_initial_call=True
 )
 def upload_callback(content, lang, text, label, 
-                    n_value, checklist, mem):
+                    n_value, checklist, size,
+                    mem):
     mem = CONFIG(mem)
     checklist = checklist if checklist is not None else []
     shuffle = CONFIG.shuffle in checklist
+    active_learning = CONFIG.active_learning in checklist
+    size = size if active_learning else None
     return upload(mem, content, lang=lang,
                   text=text, label=label,
                   n_value=n_value, 
-                  shuffle=shuffle)
+                  shuffle=shuffle, size=size,
+                  active_learning=active_learning)
 
 
 def test_component(component):

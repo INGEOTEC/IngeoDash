@@ -99,6 +99,22 @@ def test_upload_labels():
     assert mem[mem.labels] == klasses.tolist()
 
 
+def test_size_active_learning():
+    mem = CONFIG({CONFIG.username: 'xxx'})
+    mem.label_header = 'klass'
+    D = list(tweet_iterator(TWEETS))
+    CONFIG.db['xxx'] = {mem.permanent: [D[-1]]}
+    D1 = [dict(text=x['text']) for x in D[50:]]
+    _ = [json.dumps(x) for x in D[:50] + D1]
+    content_str = str(base64.b64encode(bytes('\n'.join(_),
+                                       encoding='utf-8')),
+                      encoding='utf-8')
+    content = f'NA,{content_str}'
+    _ = upload(mem, content, 'es', active_learning=True, size=30)
+    info = json.loads(_)
+    assert info[mem.size] == 30
+
+
 def test_active_learning_callback():
     assert active_learning_callback(None)
     assert not active_learning_callback([CONFIG.active_learning])

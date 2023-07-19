@@ -32,8 +32,11 @@ def read_json(mem: Config, data):
 def upload(mem: Config, content, lang='es', 
            type='json', text='text', 
            label='klass', n_value=CONFIG.n_value,
-           shuffle=0, call_next=table_next):
+           shuffle=False, size=None, active_learning=False,
+           call_next=table_next):
     mem.mem.update(dict(label_header=label, text=text, n_value=n_value))
+    if active_learning:
+        mem.mem.update({mem.active_learning: active_learning, mem.size: size})
     mem.label_header = label
     mem.text = text
     mem.n_value = n_value
@@ -53,8 +56,9 @@ def upload(mem: Config, content, lang='es',
         original = data
     db[mem.permanent] = permanent
     db[mem.original] = original
+    size = len(data) if not active_learning else size
     mem.mem.update({mem.lang: lang,
-                    mem.size: len(data),
+                    mem.size: size,
                     mem.username: username})
     if call_next is not None:
         call_next(mem)

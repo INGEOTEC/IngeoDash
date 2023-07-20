@@ -26,8 +26,8 @@ def test_label_column():
     db = CONFIG.db['xxx']
     label_column(mem)
     for hy in data:
-        assert '-' == hy[mem.label_header]
-    labels = ['+', '-', '-']
+        assert 0 == hy[mem.label_header]
+    labels = [1, 0, 0]
     for k, ele in zip(labels,
                       data):
         ele[mem.label_header] = k
@@ -99,7 +99,7 @@ def test_flip_label():
     db = CONFIG.db['xxx']
     label_column(mem)
     flip_label(mem, k=1)
-    assert db[mem.data][1][mem.label_header] == '+'
+    assert db[mem.data][1][mem.label_header] == 1
 
 
 def test_store():

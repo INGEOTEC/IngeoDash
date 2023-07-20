@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import table_next, progress, update_row, table, table_component, table_prev
+from IngeoDash.app import table_next, progress, update_row, table, table_component, table_prev, labels_proportion
 from IngeoDash.download import download, download_component
 from IngeoDash.upload import upload, upload_component
 from IngeoDash.config import CONFIG
@@ -50,6 +50,15 @@ def table_callback(mem):
 def progress_callback(mem):
     mem = CONFIG(mem)
     return progress(mem)
+
+
+@callback(
+    Output(CONFIG.labels_proportion, 'children'),
+    Input(CONFIG.store, 'data')
+)
+def progress_callback(mem):
+    mem = CONFIG(mem)
+    return labels_proportion(mem)
 
 
 @callback(

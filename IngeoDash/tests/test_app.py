@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.app import mock_data, table_next, progress, user, update_row, table_component, table_prev
+from IngeoDash.app import mock_data, table_next, progress, user, update_row, table_component, table_prev, labels_proportion
+from dash.exceptions import PreventUpdate
 from IngeoDash.annotate import label_column
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
@@ -124,4 +125,23 @@ def test_update_row():
     CONFIG.db['xxx'] = {mem.data: D[:10]}
     label_column(mem)    
     _ = update_row(mem, dict(row=0))
-    assert isinstance(_, Patch)    
+    assert isinstance(_, Patch)
+
+
+def test_labels_proportion():
+    try:
+        labels_proportion(CONFIG)
+    except PreventUpdate:
+        pass
+    _ = {CONFIG.username: 'xxx'}
+    mem = CONFIG(_)
+    CONFIG.db['xxx'] = dict()
+    try:
+        labels_proportion(mem)
+    except PreventUpdate:
+        pass
+    CONFIG.db['xxx'].update({mem.permanent: [dict(klass=0)] * 3 + [dict(klass=1)] * 5})
+    v = np.array([3, 5])
+    v = v / v.sum() * 100
+    for ele, p in zip(labels_proportion(mem), v):
+        assert ele.value == p

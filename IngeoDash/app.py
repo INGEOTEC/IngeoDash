@@ -14,6 +14,7 @@
 from IngeoDash.annotate import flip_label, label_column, store
 from IngeoDash.config import CONFIG, Config
 from dash import dash_table, html
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash import Patch
 import string
@@ -85,11 +86,14 @@ def table_component():
                                  color='primary', 
                                  id=CONFIG.next,
                                  n_clicks=0)])
-    return dbc.Stack([dbc.Progress(value=0, id=CONFIG.progress),
+    labels_proportion = dbc.Progress(id=CONFIG.labels_proportion)
+    return dbc.Stack([dbc.Progress(value=0, label='Progress',
+                                   id=CONFIG.progress,
+                                   color='info'),
+                      labels_proportion,
                       html.Div(id=CONFIG.center,
                                children=table(CONFIG)),
-                      buttons
-                      ])
+                      buttons])
 
 
 def user(mem: Config):
@@ -134,4 +138,25 @@ def update_row(mem: Config, table: dict):
     return patch
 
 
+def labels_proportion(mem: Config):
+    if mem.username not in mem:
+        raise PreventUpdate
+    db = CONFIG.db[mem[mem.username]]
+    if mem.permanent not in db:
+        raise PreventUpdate
+    D = db[mem.permanent]
+    labels, cnt = np.unique([x[mem.label_header] for x in D], return_counts=True)
+    proportions = 100 * cnt / cnt.sum()
+    colors = ['primary', 'secondary', 'success']
+    output = []
+    for label, amount, prop, k in zip(labels, cnt, proportions,
+                                      range(len(labels))):
+        _ = dbc.Progress(value=prop, color=colors[k % len(colors)],
+                         label=f'{label} (#{amount})', bar=True)
+        output.append(_)
+    return output
 
+
+if __name__ == '__main__':
+    from IngeoDash.__main__ import test_component
+    test_component(table_component())

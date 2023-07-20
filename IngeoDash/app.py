@@ -67,6 +67,7 @@ def table(mem: Config):
         data = CONFIG.db[mem[mem.username]][mem.data]
     else:
         data = [{}]
+    data = [{k: f'{v}'for k, v in x.items()} for x in data]
     return dash_table.DataTable(data if len(data) else [{}],
                                 style_data={'whiteSpace': 'normal',
                                             'textAlign': 'left',
@@ -129,7 +130,7 @@ def update_row(mem: Config, table: dict):
     data = flip_label(mem, k=table['row'])
     patch = Patch()
     del patch[table['row']]
-    patch.insert(table['row'], data)
+    patch.insert(table['row'], {k: f'{v}'for k, v in data.items()})
     return patch
 
 

@@ -90,7 +90,7 @@ def label_column(mem: Config, model=model):
         if _.shape[0] > 1:
             mem[mem.labels] = tuple(_.tolist())
             return label_column_predict(mem, model=model)
-    label = mem.get(mem.labels, ('-', ))[0]
+    label = mem.get(mem.labels, (0, ))[0]
     data = db[mem.data]
     for ele in data:
         ele[mem.label_header] = ele.get(mem.label_header, label)
@@ -100,7 +100,7 @@ def flip_label(mem: Config, k: int):
     db = CONFIG.db[mem[mem.username]]
     data = db[mem.data]
     assert k < len(data)
-    labels = mem.get(mem.labels, ('-', '+')) 
+    labels = mem.get(mem.labels, (0, 1)) 
     label = data[k][mem.label_header]
     index = (labels.index(label) + 1) % len(labels)
     data[k][mem.label_header] = labels[index]

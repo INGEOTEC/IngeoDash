@@ -44,7 +44,8 @@ def test_Config():
                    batch_size='n_value',
                    checklist='checklist',
                    active_learning='active_learning',
-                   shuffle='shuffle')
+                   shuffle='shuffle',
+                   labels_proportion='labels_proportion')
     for k, v in default.items():
         assert v == getattr(conf, k)
 

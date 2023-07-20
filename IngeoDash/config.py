@@ -47,6 +47,7 @@ class Config:
     checklist: str='checklist'
     active_learning: str='active_learning'
     shuffle: str='shuffle'
+    labels_proportion: str='labels_proportion'
 
     def __getitem__(self, key):
         return self.mem[key]

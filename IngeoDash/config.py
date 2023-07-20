@@ -52,6 +52,7 @@ class Config:
     voc_size_exponent: int=15
     voc_selection: str='most_common_by_type'
     estimator_class: object=LinearSVC
+    decision_function_name: str='decision_function'
 
 
     def __getitem__(self, key):

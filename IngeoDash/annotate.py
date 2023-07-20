@@ -52,6 +52,7 @@ def model(mem: Config, data: dict, select: bool=True):
               voc_size_exponent=mem.voc_size_exponent,
               voc_selection=mem.voc_selection)
     stack = StackGeneralization(decision_function_models=[bow, dense],
+                                decision_function_name=mem.decision_function_name,
                                 estimator_class=mem.estimator_class)
     return stack.fit(data)
     

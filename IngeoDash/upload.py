@@ -15,7 +15,7 @@ from IngeoDash.config import CONFIG, Config
 from IngeoDash.app import user, table_next
 from IngeoDash.annotate import has_label
 from EvoMSA.utils import MODEL_LANG
-from dash import dcc, html
+from dash import dcc, html, callback, Output, Input
 import numpy as np
 import dash_bootstrap_components as dbc
 import random
@@ -32,8 +32,11 @@ def read_json(mem: Config, data):
 def upload(mem: Config, content, lang='es', 
            type='json', text='text', 
            label='klass', n_value=CONFIG.n_value,
-           shuffle=0, call_next=table_next):
+           shuffle=False, size=None, active_learning=False,
+           call_next=table_next):
     mem.mem.update(dict(label_header=label, text=text, n_value=n_value))
+    if active_learning:
+        mem.mem.update({mem.active_learning: active_learning, mem.size: size})
     mem.label_header = label
     mem.text = text
     mem.n_value = n_value
@@ -53,12 +56,25 @@ def upload(mem: Config, content, lang='es',
         original = data
     db[mem.permanent] = permanent
     db[mem.original] = original
+    size = len(data) if not active_learning else size
     mem.mem.update({mem.lang: lang,
-                    mem.size: len(data),
+                    mem.size: size,
                     mem.username: username})
     if call_next is not None:
         call_next(mem)
     return json.dumps(mem.mem)
+
+
+@callback(
+    Output(CONFIG.size, 'disabled', allow_duplicate=True),
+    Input(CONFIG.checklist, 'value'),
+    prevent_initial_call=True,
+)
+def active_learning_callback(checklist):
+    checklist = checklist if checklist is not None else []
+    if CONFIG.active_learning in checklist:
+        return False
+    return True
 
 
 def upload_component():
@@ -86,14 +102,29 @@ def upload_component():
                                dcc.Input(id=CONFIG.batch_size,
                                          value=10,
                                          type='number'),
-                               dbc.Checklist(id=CONFIG.shuffle,
-                                             options=[dict(label='Shuffle', value=1)],
+                               dbc.Checklist(id=CONFIG.checklist,
+                                             options=[dict(label='Shuffle', value=CONFIG.shuffle),
+                                                      dict(label='Active Learning',
+                                                           value=CONFIG.active_learning)],
                                              switch=True)])
+    al_grp = dbc.InputGroup([dbc.InputGroupText('Number of labeled elements:'),
+                             dcc.Input(id=CONFIG.size,
+                                       value=1000,
+                                       type='number',
+                                       disabled=True)])
     upload_button = dbc.Button(dcc.Upload(id=CONFIG.upload,
                                           children=html.Div('Drop or Select File')))
-    return dbc.Col(dbc.Stack([lang_grp, data_grp, upload_button]))
+    return dbc.Col(dbc.Stack([lang_grp, data_grp,
+                              al_grp,
+                              upload_button]))
 
 
 if __name__ == '__main__':
     from IngeoDash.__main__ import test_component
     test_component(upload_component())
+    # from dash import Dash
+    # component = upload_component()
+    # app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP],
+    #            suppress_callback_exceptions=True)
+    # app.layout = dbc.Container([dbc.Row(component)])
+    # app.run_server(debug=True)    

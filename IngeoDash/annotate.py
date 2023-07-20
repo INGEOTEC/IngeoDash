@@ -41,13 +41,42 @@ def model(mem: Config, data: dict):
     return dense.select(D=data).fit(data)
 
 
+def active_learning_selection(mem: Config):
+    db = CONFIG.db[mem[mem.username]]
+    dense = model(mem, db[mem.permanent])  
+    D = db[mem.data] + db.get(mem.original, list())
+    hy = dense.decision_function(D)
+    if len(mem[mem.labels]) > 2:
+        index = np.arange(hy.shape[0])
+        ss = np.argsort(hy, axis=1)
+        diff = hy[index, ss[:, -1]] - hy[index, ss[:, -2]]
+        index = np.argsort(diff)[:mem.n_value]
+        index.sort()
+        labels = np.array(mem[mem.labels])
+        klasses = labels[hy[index].argmax(axis=1)]
+    else:
+        index = np.argsort(np.fabs(hy[:, 0]))[:mem.n_value]
+        index.sort()
+        labels = np.array(mem[mem.labels])
+        klasses = labels[np.where(hy[:, 0][index] > 0, 1, 0)]
+    data = []
+    for cnt, i in enumerate(index):
+        ele = D.pop(i - cnt)
+        ele[mem.label_header] = klasses[cnt]
+        data.append(ele)
+    db[mem.original] = D
+    db[mem.data] = data
+
+
 def label_column_predict(mem: Config, model=None):
     db = CONFIG.db[mem[mem.username]]
     data = db[mem.data]
     if len(data) == 0 or np.all([has_label(mem, x) for x in data]):
         return   
+    if mem.active_learning in mem and mem[mem.active_learning]:
+        return active_learning_selection(mem)
     D = db[mem.permanent]
-    dense = model(mem, D)
+    dense = model(mem, D)    
     hys = dense.predict(data).tolist()
     for ele, hy in zip(data, hys):
         ele[mem.label_header] = ele.get(mem.label_header, hy)        

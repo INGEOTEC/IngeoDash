@@ -112,10 +112,14 @@ def user(mem: Config):
 def progress(mem: Config):
     if mem.username not in mem:
         return 0
-    db = CONFIG.db[mem[mem.username]]
+    db = CONFIG.db[mem[mem.username]]        
     data = len(db[mem.data]) if mem.data in db else 0
     ori = len(db[mem.original]) if mem.original in db else 0
     tot = mem[mem.size] if mem.size in mem else data + ori 
+    if mem.active_learning in mem and mem[mem.active_learning]:
+        num = len(db[mem.permanent]) if mem.permanent in db else 0
+        num += data
+        return np.ceil(100 * num / tot)
     if tot == 0:
         return 0
     return np.ceil(100 * (tot - ori) / tot)

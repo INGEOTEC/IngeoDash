@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from EvoMSA import BoW, DenseBoW
+from EvoMSA import BoW, DenseBoW, StackGeneralization
 from typing import Union
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
+from sklearn.svm import LinearSVC
 import numpy as np
 
 
@@ -26,19 +27,34 @@ def has_label(mem: Config, x):
     return False
 
 
-def model(mem: Config, data: dict):
+def model(mem: Config, data: dict, select: bool=True):
     lang = mem[mem.lang]
     if lang not in CONFIG.denseBoW:
-        dense = DenseBoW(lang=lang, voc_size_exponent=15,
+        dense = DenseBoW(lang=lang, voc_size_exponent=mem.voc_size_exponent,
+                         voc_selection=mem.voc_selection,
                          n_jobs=mem.n_jobs, dataset=False)
         CONFIG.denseBoW[lang] = dense.text_representations
     dense = DenseBoW(lang=lang, key=mem.text,
                      label_key=mem.label_header,
-                     voc_size_exponent=15,
+                     voc_size_exponent=mem.voc_size_exponent,
+                     voc_selection=mem.voc_selection,
                      n_jobs=mem.n_jobs,
                      dataset=False, emoji=False, keyword=False)
     dense.text_representations_extend(CONFIG.denseBoW[lang])
-    return dense.select(D=data).fit(data)
+    if select:
+        dense.select(D=data)
+    _ = np.unique([x[mem.label_header] for x in data],
+                  return_counts=True)[1]
+    if np.any(_ < 5):
+        return dense.fit(data)
+    bow = BoW(lang=lang, key=mem.text,
+              label_key=mem.label_header,
+              voc_size_exponent=mem.voc_size_exponent,
+              voc_selection=mem.voc_selection)
+    stack = StackGeneralization(decision_function_models=[bow, dense],
+                                estimator_class=mem.estimator_class)
+    return stack.fit(data)
+    
 
 
 def active_learning_selection(mem: Config):

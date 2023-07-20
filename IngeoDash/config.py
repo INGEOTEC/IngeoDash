@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass, field
+from sklearn.svm import LinearSVC
 from typing import Tuple
 from copy import deepcopy
 import json
@@ -48,6 +49,10 @@ class Config:
     active_learning: str='active_learning'
     shuffle: str='shuffle'
     labels_proportion: str='labels_proportion'
+    voc_size_exponent: int=15
+    voc_selection: str='most_common_by_type'
+    estimator_class: object=LinearSVC
+
 
     def __getitem__(self, key):
         return self.mem[key]

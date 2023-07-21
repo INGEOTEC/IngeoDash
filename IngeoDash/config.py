@@ -65,7 +65,9 @@ class Config:
         cls = deepcopy(self)
         if value is not None:
             cls.mem = json.loads(value) if isinstance(value, str) else value
-        for key in ['label_header', 'text', 'n_value']:
+        for key in ['label_header', 'text', 'n_value',
+                    'voc_size_exponent', 'voc_selection',
+                    'estimator_class', 'decision_function_name']:
             if key in cls.mem:
                 setattr(cls, key, cls.mem[key])
         return cls

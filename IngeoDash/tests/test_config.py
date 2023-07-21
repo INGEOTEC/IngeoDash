@@ -13,6 +13,7 @@
 # limitations under the License.
 from IngeoDash.config import Config
 from IngeoDash.config import CONFIG
+from sklearn.svm import LinearSVC
 
 
 def test_Config():
@@ -45,7 +46,11 @@ def test_Config():
                    checklist='checklist',
                    active_learning='active_learning',
                    shuffle='shuffle',
-                   labels_proportion='labels_proportion')
+                   labels_proportion='labels_proportion',
+                   voc_size_exponent=15,
+                   voc_selection='most_common_by_type',
+                   estimator_class=LinearSVC,
+                   decision_function_name='decision_function')
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -71,7 +76,11 @@ def test_Config_call():
 
 def test_Config_call2():
     mem = CONFIG(dict(label_header='label',
-                      text='texto', n_value=12))
+                      text='texto', n_value=12,
+                      voc_size_exponent=15,
+                      voc_selection='most_common_by_type',
+                      estimator_class=LinearSVC,
+                      decision_function_name='decision_function'))
     assert mem.label_header == 'label'
     assert mem.text == 'texto'
     assert mem.n_value == 12

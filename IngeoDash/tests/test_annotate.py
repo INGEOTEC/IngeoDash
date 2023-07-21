@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.annotate import label_column, flip_label, store, similarity
+from IngeoDash.annotate import label_column, flip_label, store, similarity, model
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -91,7 +91,6 @@ def test_predict_active_learning():
     assert [x['id'] for x in data] != list(range(10, 20))
     
 
-
 def test_flip_label():
     data = [dict() for i in range(3)]
     mem = CONFIG({CONFIG.username: 'xxx'})
@@ -125,4 +124,14 @@ def test_similarity():
     _ = sorted([[tweet['nn'], sim]for tweet, (sim, ) in zip(tweets, sim_values)],
                key=lambda x: x[1],
                reverse=True)
-    assert 'Me choca ahorita' in _[0][0]    
+    assert 'Me choca ahorita' in _[0][0]
+
+
+def test_stack_dense():
+    from EvoMSA import BoW, DenseBoW, StackGeneralization
+    mem = CONFIG({CONFIG.lang: 'es'})
+    D = list(tweet_iterator(TWEETS))
+    m = model(mem, D[:15])
+    assert isinstance(m, DenseBoW) and not isinstance(m, StackGeneralization)
+    m = model(mem, D)
+    assert isinstance(m, StackGeneralization)

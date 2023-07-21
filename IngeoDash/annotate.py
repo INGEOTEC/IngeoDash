@@ -57,7 +57,6 @@ def model(mem: Config, data: dict, select: bool=True):
     return stack.fit(data)
     
 
-
 def active_learning_selection(mem: Config):
     db = CONFIG.db[mem[mem.username]]
     dense = model(mem, db[mem.permanent])  
@@ -83,6 +82,7 @@ def active_learning_selection(mem: Config):
         data.append(ele)
     db[mem.original] = D
     db[mem.data] = data
+    return dense
 
 
 def label_column_predict(mem: Config, model=None):
@@ -96,7 +96,8 @@ def label_column_predict(mem: Config, model=None):
     dense = model(mem, D)    
     hys = dense.predict(data).tolist()
     for ele, hy in zip(data, hys):
-        ele[mem.label_header] = ele.get(mem.label_header, hy)        
+        ele[mem.label_header] = ele.get(mem.label_header, hy)
+    return dense        
 
 
 def label_column(mem: Config, model=model):

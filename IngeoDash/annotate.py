@@ -27,7 +27,7 @@ def has_label(mem: Config, x):
     return False
 
 
-def model(mem: Config, data: dict, select: bool=True):
+def model(mem: Config, data: dict):
     lang = mem[mem.lang]
     if lang not in CONFIG.denseBoW:
         dense = DenseBoW(lang=lang, voc_size_exponent=mem.voc_size_exponent,
@@ -41,7 +41,7 @@ def model(mem: Config, data: dict, select: bool=True):
                      n_jobs=mem.n_jobs,
                      dataset=False, emoji=False, keyword=False)
     dense.text_representations_extend(CONFIG.denseBoW[lang])
-    if select:
+    if mem.dense_select:
         dense.select(D=data)
     _ = np.unique([x[mem.label_header] for x in data],
                   return_counts=True)[1]
@@ -78,7 +78,7 @@ def active_learning_selection(mem: Config):
     data = []
     for cnt, i in enumerate(index):
         ele = D.pop(i - cnt)
-        ele[mem.label_header] = klasses[cnt]
+        ele[mem.label_header] = ele.get(mem.label_header, klasses[cnt])
         data.append(ele)
     db[mem.original] = D
     db[mem.data] = data

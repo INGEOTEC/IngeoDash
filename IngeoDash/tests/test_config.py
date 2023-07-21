@@ -50,7 +50,8 @@ def test_Config():
                    voc_size_exponent=15,
                    voc_selection='most_common_by_type',
                    estimator_class=LinearSVC,
-                   decision_function_name='decision_function')
+                   decision_function_name='decision_function',
+                   dense_select=True)
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -75,15 +76,16 @@ def test_Config_call():
 
 
 def test_Config_call2():
-    mem = CONFIG(dict(label_header='label',
-                      text='texto', n_value=12,
-                      voc_size_exponent=15,
-                      voc_selection='most_common_by_type',
-                      estimator_class=LinearSVC,
-                      decision_function_name='decision_function'))
-    assert mem.label_header == 'label'
-    assert mem.text == 'texto'
-    assert mem.n_value == 12
+    kwargs = dict(label_header='label',
+                  text='texto', n_value=12,
+                  voc_size_exponent=15,
+                  voc_selection='most_common_by_type',
+                  estimator_class=LinearSVC,
+                  decision_function_name='decision_function',
+                  dense_select=True)
+    mem = CONFIG(kwargs)
+    for k, v in kwargs.items():
+        assert getattr(mem, k) == v
 
 
 def test_CONFIG():

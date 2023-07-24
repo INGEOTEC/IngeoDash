@@ -53,6 +53,7 @@ class Config:
     voc_selection: str='most_common_by_type'
     estimator_class: object=LinearSVC
     decision_function_name: str='decision_function'
+    dense_select: bool=True
 
 
     def __getitem__(self, key):
@@ -65,7 +66,10 @@ class Config:
         cls = deepcopy(self)
         if value is not None:
             cls.mem = json.loads(value) if isinstance(value, str) else value
-        for key in ['label_header', 'text', 'n_value']:
+        for key in ['label_header', 'text', 'n_value',
+                    'voc_size_exponent', 'voc_selection',
+                    'estimator_class', 'decision_function_name',
+                    'dense_select']:
             if key in cls.mem:
                 setattr(cls, key, cls.mem[key])
         return cls

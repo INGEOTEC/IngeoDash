@@ -13,4 +13,4 @@
 # limitations under the License.
 from IngeoDash.annotate import label_column, flip_label, store, similarity
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'

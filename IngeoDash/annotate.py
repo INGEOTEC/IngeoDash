@@ -55,13 +55,19 @@ def model(mem: Config, data: dict):
                                 decision_function_name=mem.decision_function_name,
                                 estimator_class=mem.estimator_class)
     return stack.fit(data)
-    
 
-def active_learning_selection(mem: Config):
-    db = CONFIG.db[mem[mem.username]]
-    dense = model(mem, db[mem.permanent])  
-    D = db[mem.data] + db.get(mem.original, list())
-    hy = dense.decision_function(D)
+
+def random_selection(mem: Config, hy):
+    index = np.arange(hy.shape[0])
+    np.random.shuffle(index)
+    index = index[:mem.n_value]
+    index.sort()
+    labels = np.array(mem[mem.labels])
+    klasses = labels[np.where(hy[:, 0][index] > 0, 1, 0)]
+    return index, klasses    
+
+
+def boundary_selection(mem: Config, hy):
     if len(mem[mem.labels]) > 2:
         index = np.arange(hy.shape[0])
         ss = np.argsort(hy, axis=1)
@@ -75,6 +81,15 @@ def active_learning_selection(mem: Config):
         index.sort()
         labels = np.array(mem[mem.labels])
         klasses = labels[np.where(hy[:, 0][index] > 0, 1, 0)]
+    return index, klasses    
+
+
+def active_learning_selection(mem: Config):
+    db = CONFIG.db[mem[mem.username]]
+    dense = model(mem, db[mem.permanent])  
+    D = db[mem.data] + db.get(mem.original, list())
+    hy = dense.decision_function(D)
+    index, klasses = globals()[f'{mem.active_learning_selection}'](mem, hy)
     data = []
     for cnt, i in enumerate(index):
         ele = D.pop(i - cnt)

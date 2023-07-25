@@ -54,6 +54,7 @@ class Config:
     estimator_class: object=LinearSVC
     decision_function_name: str='decision_function'
     dense_select: bool=True
+    active_learning_selection: str='boundary_selection'
 
 
     def __getitem__(self, key):
@@ -69,7 +70,7 @@ class Config:
         for key in ['label_header', 'text', 'n_value',
                     'voc_size_exponent', 'voc_selection',
                     'estimator_class', 'decision_function_name',
-                    'dense_select']:
+                    'dense_select', 'active_learning_selection']:
             if key in cls.mem:
                 setattr(cls, key, cls.mem[key])
         return cls

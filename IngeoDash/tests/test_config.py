@@ -51,7 +51,8 @@ def test_Config():
                    voc_selection='most_common_by_type',
                    estimator_class=LinearSVC,
                    decision_function_name='decision_function',
-                   dense_select=True)
+                   dense_select=True,
+                   active_learning_selection='boundary_selection')
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -82,7 +83,8 @@ def test_Config_call2():
                   voc_selection='most_common_by_type',
                   estimator_class=LinearSVC,
                   decision_function_name='decision_function',
-                  dense_select=True)
+                  dense_select=True,
+                  active_learning_selection='boundary_selection')
     mem = CONFIG(kwargs)
     for k, v in kwargs.items():
         assert getattr(mem, k) == v

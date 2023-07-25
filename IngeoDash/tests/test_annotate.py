@@ -89,6 +89,27 @@ def test_predict_active_learning():
     data = db[mem.data]
     assert [x['id'] for x in permanent] == list(range(10))
     assert [x['id'] for x in data] != list(range(10, 20))
+
+
+def test_random_selection():
+    _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
+         CONFIG.lang: 'es', CONFIG.active_learning: True,
+         'active_learning_selection': 'random_selection'}
+    mem = CONFIG(_)
+
+    D = list(tweet_iterator(TWEETS))
+    for k, x in enumerate(D):
+        x['id'] = k
+    for x in D[10:]:
+        del x['klass']
+    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
+                        mem.original: D[20:]}
+    label_column(mem)
+    db = CONFIG.db['xxx']
+    permanent = db[mem.permanent]
+    data = db[mem.data]    
+    assert [x['id'] for x in permanent] == list(range(10))
+    assert [x['id'] for x in data] != list(range(10, 20))       
     
 
 def test_flip_label():

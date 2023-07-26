@@ -92,8 +92,12 @@ def balance_selection(mem: Config, hy):
     [_select_top_k(selected, s, cnt) for s in ss]
     selected = list(selected)
     np.random.shuffle(selected)
-    selected = sorted(selected[:mem.n_value])
-    return np.array(selected), klasses
+    selected = np.array(sorted(selected[:mem.n_value]))
+    if klasses.shape[0] > 2:
+        _k = klasses[hy[selected].argmax(axis=1)]
+    else:
+        _k = klasses[np.where(hy[:, 0][selected] > 0, 1, 0)]
+    return selected, _k
 
 
 def random_selection(mem: Config, hy):

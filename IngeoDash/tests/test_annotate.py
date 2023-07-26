@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.annotate import label_column, flip_label, store, similarity, model
+from IngeoDash.annotate import label_column, flip_label, store, similarity, model, balance_selection
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -109,8 +109,42 @@ def test_random_selection():
     permanent = db[mem.permanent]
     data = db[mem.data]    
     assert [x['id'] for x in permanent] == list(range(10))
-    assert [x['id'] for x in data] != list(range(10, 20))       
-    
+    assert [x['id'] for x in data] != list(range(10, 20))
+
+
+def test_balance_selection():
+    from EvoMSA import BoW
+    D = list(tweet_iterator(TWEETS))
+    klasses = np.unique([x['klass'] for x in D[:10]]).tolist()
+    _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
+         CONFIG.lang: 'es', CONFIG.active_learning: True,
+         CONFIG.labels: klasses,
+         'active_learning_selection': 'balance_selection'}
+    mem = CONFIG(_)
+    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
+                        mem.original: D[20:]}
+    bow = BoW(lang=mem[mem.lang], voc_selection=mem.voc_selection,
+              voc_size_exponent=mem.voc_size_exponent).fit(D[:10])
+    hy = bow.decision_function(D[10:])
+    balance_selection(mem, hy)
+
+
+def test_balance_selection_binary():
+    from EvoMSA import BoW
+    D = [x for x in tweet_iterator(TWEETS) if x['klass'] in ['N', 'P']]
+    klasses = np.unique([x['klass'] for x in D[:10]]).tolist()
+    _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
+         CONFIG.lang: 'es', CONFIG.active_learning: True,
+         CONFIG.labels: klasses,
+         'active_learning_selection': 'balance_selection'}
+    mem = CONFIG(_)
+    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
+                        mem.original: D[20:]}
+    bow = BoW(lang=mem[mem.lang], voc_selection=mem.voc_selection,
+              voc_size_exponent=mem.voc_size_exponent).fit(D[:10])
+    hy = bow.decision_function(D[10:])
+    balance_selection(mem, hy)    
+
 
 def test_flip_label():
     data = [dict() for i in range(3)]

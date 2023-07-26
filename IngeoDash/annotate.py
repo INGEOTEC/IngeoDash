@@ -57,6 +57,45 @@ def model(mem: Config, data: dict):
     return stack.fit(data)
 
 
+def _select_top_k(selected, members, cnt):
+    if cnt <= 0:
+        return
+    sel = []
+    for i in members:
+        if i not in selected:
+            sel.append(i)
+        if len(sel) == cnt:
+            break
+    [selected.add(x) for x in sel]
+    
+
+def balance_selection(mem: Config, hy):
+    db = CONFIG.db[mem[mem.username]]
+    D = db[mem.permanent]
+    klasses, n_elements = np.unique([x[mem.label_header] for x in D],
+                                    return_counts=True)
+    missing = 1 - n_elements / n_elements.max()
+    max_ele = n_elements.max()
+    selected = set()
+    if klasses.shape[0] > 2:
+        ss = np.argsort(hy, axis=0)[::-1].T
+        for k, (c, n_ele, s) in enumerate(zip(mem.n_value * missing,
+                                              max_ele - n_elements, ss)):
+            cnt = np.ceil(min(c, n_ele)).astype(int)
+            _select_top_k(selected, s, cnt)
+    else:
+        ss = np.argsort(hy, axis=0)[:, 0]
+        ss = [ss, ss[::-1]]
+        for c, s in zip(max_ele - n_elements, ss):
+            _select_top_k(selected, s, c)
+    cnt = np.ceil((mem.n_value - len(selected)) / klasses.shape[0]).astype(int)
+    [_select_top_k(selected, s, cnt) for s in ss]
+    selected = list(selected)
+    np.random.shuffle(selected)
+    selected = sorted(selected[:mem.n_value])
+    return np.array(selected), klasses
+
+
 def random_selection(mem: Config, hy):
     index = np.arange(hy.shape[0])
     np.random.shuffle(index)

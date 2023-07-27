@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.annotate import label_column, flip_label, store, similarity, model, balance_selection
+from IngeoDash.annotate import label_column, flip_label, store, similarity, model, balance_selection, model_bow
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -133,7 +133,6 @@ def test_balance_selection():
     assert np.all(klasses == np.array([2, 0, 2, 1]))
     
 
-
 def test_balance_selection_binary():
     D = [dict(klass=0)] * 4 + [dict(klass=1)] * 6
     klasses = [0, 1]
@@ -194,3 +193,12 @@ def test_stack_dense():
     assert isinstance(m, DenseBoW) and not isinstance(m, StackGeneralization)
     m = model(mem, D)
     assert isinstance(m, StackGeneralization)
+
+
+def test_model_bow():
+    from EvoMSA import BoW
+    D = [x for _, x in zip(range(15), tweet_iterator(TWEETS))]
+    _ = {CONFIG.lang: 'es'}
+    mem = CONFIG(_)
+    bow = model_bow(mem, D)
+    assert isinstance(bow, BoW)    

@@ -52,7 +52,8 @@ def test_Config():
                    estimator_class=LinearSVC,
                    decision_function_name='decision_function',
                    dense_select=True,
-                   active_learning_selection='boundary_selection')
+                   active_learning_selection='boundary_selection',
+                   model='model')
     for k, v in default.items():
         assert v == getattr(conf, k)
 
@@ -84,7 +85,8 @@ def test_Config_call2():
                   estimator_class=LinearSVC,
                   decision_function_name='decision_function',
                   dense_select=True,
-                  active_learning_selection='boundary_selection')
+                  active_learning_selection='boundary_selection',
+                  model='model')
     mem = CONFIG(kwargs)
     for k, v in kwargs.items():
         assert getattr(mem, k) == v

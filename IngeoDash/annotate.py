@@ -27,6 +27,14 @@ def has_label(mem: Config, x):
     return False
 
 
+def model_bow(mem: Config, data: dict):
+    lang = mem[mem.lang]
+    return BoW(lang=lang, key=mem.text,
+               label_key=mem.label_header,
+               voc_size_exponent=mem.voc_size_exponent,
+               voc_selection=mem.voc_selection).fit(data)
+
+
 def model(mem: Config, data: dict):
     lang = mem[mem.lang]
     if lang not in CONFIG.denseBoW:
@@ -143,7 +151,7 @@ def active_learning_selection(mem: Config):
     return dense
 
 
-def label_column_predict(mem: Config, model=None):
+def label_column_predict(mem: Config):
     db = CONFIG.db[mem[mem.username]]
     data = db[mem.data]
     if len(data) == 0 or np.all([has_label(mem, x) for x in data]):
@@ -151,21 +159,21 @@ def label_column_predict(mem: Config, model=None):
     if mem.active_learning in mem and mem[mem.active_learning]:
         return active_learning_selection(mem)
     D = db[mem.permanent]
-    dense = model(mem, D)    
+    dense = globals()[f'{mem.model}'](mem, D)   
     hys = dense.predict(data).tolist()
     for ele, hy in zip(data, hys):
         ele[mem.label_header] = ele.get(mem.label_header, hy)
     return dense        
 
 
-def label_column(mem: Config, model=model):
+def label_column(mem: Config):
     db = CONFIG.db[mem[mem.username]]
     if mem.permanent in db:
         _ = np.unique([x[mem.label_header]
                        for x in db[mem.permanent]])
         if _.shape[0] > 1:
             mem[mem.labels] = tuple(_.tolist())
-            return label_column_predict(mem, model=model)
+            return label_column_predict(mem)
     label = mem.get(mem.labels, (0, ))[0]
     data = db[mem.data]
     for ele in data:

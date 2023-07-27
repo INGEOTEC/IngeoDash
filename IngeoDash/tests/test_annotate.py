@@ -113,37 +113,41 @@ def test_random_selection():
 
 
 def test_balance_selection():
-    from EvoMSA import BoW
-    D = list(tweet_iterator(TWEETS))
-    klasses = np.unique([x['klass'] for x in D[:10]]).tolist()
+    D = [dict(klass=0)] * 2  + [dict(klass=1)] * 2 + [dict(klass=2)]
+    klasses = [0, 1, 2]
     _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
          CONFIG.lang: 'es', CONFIG.active_learning: True,
-         CONFIG.labels: klasses,
+         CONFIG.labels: klasses, 'n_value': 4,
          'active_learning_selection': 'balance_selection'}
     mem = CONFIG(_)
-    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
-                        mem.original: D[20:]}
-    bow = BoW(lang=mem[mem.lang], voc_selection=mem.voc_selection,
-              voc_size_exponent=mem.voc_size_exponent).fit(D[:10])
-    hy = bow.decision_function(D[10:])
-    balance_selection(mem, hy)
+    hy = np.array([[-0.99, -.9, -.0001], # 2
+                   [0.01, -0.1, -0.2], # 0
+                   [0.89, 0.8, 0.9], # 2
+                   [-0.1, -0.2, -0.3], # 0
+                   [-0.3, 0.001, -0.005], # 1
+                   [-0.4, -.9, -.01], # 2 
+                   [ -0.81, -0.71, -0.91]]) # 1
+    CONFIG.db['xxx'] = {mem.permanent: D}
+    selected, klasses = balance_selection(mem, hy)
+    assert np.all(selected == np.array([0, 1, 2, 4]))
+    assert np.all(klasses == np.array([2, 0, 2, 1]))
+    
 
 
 def test_balance_selection_binary():
-    from EvoMSA import BoW
-    D = [x for x in tweet_iterator(TWEETS) if x['klass'] in ['N', 'P']]
-    klasses = np.unique([x['klass'] for x in D[:10]]).tolist()
+    D = [dict(klass=0)] * 4 + [dict(klass=1)] * 6
+    klasses = [0, 1]
     _ = {CONFIG.username: 'xxx', CONFIG.label_header: 'klass',
          CONFIG.lang: 'es', CONFIG.active_learning: True,
-         CONFIG.labels: klasses,
+         CONFIG.labels: klasses, 'n_value': 6,
          'active_learning_selection': 'balance_selection'}
     mem = CONFIG(_)
-    CONFIG.db['xxx'] = {mem.permanent: D[:10], mem.data: D[10:20],
-                        mem.original: D[20:]}
-    bow = BoW(lang=mem[mem.lang], voc_selection=mem.voc_selection,
-              voc_size_exponent=mem.voc_size_exponent).fit(D[:10])
-    hy = bow.decision_function(D[10:])
-    balance_selection(mem, hy)    
+    hy = np.array([0.9, -.9, -.88, 0.1, -0.1, 
+                   0.81, -0.81, -0.71, 0.91])    
+    CONFIG.db['xxx'] = {mem.permanent: D}
+    selected, klasses = balance_selection(mem, np.atleast_2d(hy).T)
+    assert np.all(selected == np.array([0, 1, 2, 6, 7, 8]))
+    assert np.all(klasses == np.array([1, 0, 0, 0, 0, 1]))
 
 
 def test_flip_label():

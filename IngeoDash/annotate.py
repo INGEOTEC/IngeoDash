@@ -35,6 +35,25 @@ def model_bow(mem: Config, data: dict):
                voc_selection=mem.voc_selection).fit(data)
 
 
+def model_dense(mem: Config, data: dict):
+    lang = mem[mem.lang]
+    if lang not in CONFIG.denseBoW:
+        dense = DenseBoW(lang=lang, voc_size_exponent=mem.voc_size_exponent,
+                         voc_selection=mem.voc_selection,
+                         n_jobs=mem.n_jobs, dataset=False)
+        CONFIG.denseBoW[lang] = dense.text_representations
+    dense = DenseBoW(lang=lang, key=mem.text,
+                     label_key=mem.label_header,
+                     voc_size_exponent=mem.voc_size_exponent,
+                     voc_selection=mem.voc_selection,
+                     n_jobs=mem.n_jobs,
+                     dataset=False, emoji=False, keyword=False)
+    dense.text_representations_extend(CONFIG.denseBoW[lang])
+    if mem.dense_select:
+        dense.select(D=data)
+    return dense.fit(data)
+
+
 def model(mem: Config, data: dict):
     lang = mem[mem.lang]
     if lang not in CONFIG.denseBoW:

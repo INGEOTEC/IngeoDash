@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from IngeoDash.annotate import label_column, flip_label, store, similarity, model, balance_selection, model_bow
+from IngeoDash.annotate import label_column, flip_label, store, similarity, model, balance_selection, model_bow, model_dense
 from IngeoDash.config import CONFIG
 from microtc.utils import tweet_iterator
 from EvoMSA.tests.test_base import TWEETS
@@ -201,4 +201,13 @@ def test_model_bow():
     _ = {CONFIG.lang: 'es'}
     mem = CONFIG(_)
     bow = model_bow(mem, D)
-    assert isinstance(bow, BoW)    
+    assert isinstance(bow, BoW)
+
+
+def test_model_dense():
+    from EvoMSA import DenseBoW
+    D = [x for _, x in zip(range(15), tweet_iterator(TWEETS))]
+    _ = {CONFIG.lang: 'es'}
+    mem = CONFIG(_)
+    bow = model_dense(mem, D)
+    assert isinstance(bow, DenseBoW)          
